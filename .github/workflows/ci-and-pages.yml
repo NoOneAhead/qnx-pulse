@@ -1,0 +1,86 @@
+name: QNX-Pulse CI & Codelab GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "qnx-pulse-pages"
+  cancel-in-progress: false
+
+jobs:
+  python-and-c11-ci:
+    name: Python Pytest, GCC C11 Agent & Submission Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Python test suite (pytest)
+        run: pytest -v
+
+      - name: Compile & run C11 Target Agent unit tests (zero warnings)
+        working-directory: target/qnx_pulse_agent
+        run: |
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -Iinclude -Isrc tests/test_telemetry_ring.c src/telemetry_ring.c -o test_telemetry_ring
+          ./test_telemetry_ring
+          rm -f test_telemetry_ring
+
+      - name: Verify C11 Host Simulator -> Python QNX-Pulse Analyzer pipeline
+        run: |
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -Itarget/qnx_pulse_agent/include -Itarget/qnx_pulse_agent/src \
+            target/qnx_pulse_agent/src/qnx_pulse_agent.c target/qnx_pulse_agent/src/telemetry_ring.c \
+            -o /tmp/qnx_pulse_agent_sim
+          /tmp/qnx_pulse_agent_sim --scenario inversion --format traceprinter --output /tmp/sim_trace.txt
+          python -m qnx_pulse.cli analyze --trace /tmp/sim_trace.txt --json | grep -q '"PI-001"'
+          python -m qnx_pulse.cli audit --secpol target/qnx_pulse_agent/qnxpulse.secpol --fail-on-critical
+          rm -f /tmp/qnx_pulse_agent_sim /tmp/sim_trace.txt
+
+      - name: Run full pre-submission auditor
+        run: python scripts/verify_submission.py
+
+  deploy-codelab-pages:
+    name: Deploy Standalone QNX 8.0 Codelab to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: python-and-c11-ci
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload codelab/ as static Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "codelab"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

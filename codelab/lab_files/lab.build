@@ -1,0 +1,85 @@
+################################################################################
+# QNX SDP 8.0 Image File System (IFS) Buildfile — Zero-Jitter ADAS AEB Lab
+# Target: QEMU x86_64 (multiboot) with Instrumented Microkernel + Secpol
+#
+# Compile security policy first:
+#   secpolcompile -o secpol.bin lab.secpol
+# Build bootable IFS image:
+#   mkifs -v lab.build ifs-lab.bin
+################################################################################
+
+[virtual=x86_64,multiboot] boot = {
+    # Serial console on COM1 (0x3f8) for headless QEMU (-nographic / -serial mon:stdio)
+    startup-x86 -D 8250
+
+    # QNX 8.0 NOTE: Kernel superlocking is ENABLED BY DEFAULT in QNX OS 8.0.
+    # Legacy QNX 7 superlocking flags to procnto are obsolete and omitted here.
+    # Use procnto-smp-instr (instrumented microkernel) so tracelogger can record
+    # kernel trace events (.kev) for real-time analysis.
+    PATH=/proc/boot:/bin:/usr/bin LD_LIBRARY_PATH=/proc/boot:/lib:/usr/lib procnto-smp-instr -v
+}
+
+[+script] startup-script = {
+    PATH=/proc/boot:/bin:/usr/bin
+    LD_LIBRARY_PATH=/proc/boot:/lib:/usr/lib
+
+    display_msg "=========================================================="
+    display_msg "  QNX 8.0 Zero-Jitter ADAS AEB Lab (Instrumented + Secpol)"
+    display_msg "=========================================================="
+
+    # 1. Push the compiled Mandatory Access Control (MAC) security policy into
+    #    procnto BEFORE launching any services. Requires PROCMGR_AID_MAC_POLICY.
+    #    Default path is /proc/boot/secpol.bin when omitted.
+    secpolpush /proc/boot/secpol.bin
+
+    # 2. Launch structured system logger (slogger2) under its confined type
+    #    and non-root UID/GID (20:20).
+    on -T slogger2_t -u 20:20 slogger2
+    waitfor /dev/slog2 3
+
+    # 3. Start serial driver for QEMU console I/O
+    on -T console_t devc-ser8250 -e -b115200 0x3f8^0.4 &
+    waitfor /dev/ser1 3
+    reopen /dev/ser1
+
+    # 4. Launch our hardened /dev/lidar_fusion Resource Manager under its
+    #    startup type (lidar_mgr_t) and unprivileged UID/GID (100:100).
+    #    After resmgr_attach(), it transitions to lidar_mgr_run_t!
+    on -T lidar_mgr_t -u 100:100 lidar_mgr &
+    waitfor /dev/lidar_fusion 3
+
+    display_msg "[BOOT] /dev/lidar_fusion online. Launching interactive ksh..."
+    ksh
+}
+
+# Standard POSIX symlinks inside the IFS
+[type=link] /bin/sh=/proc/boot/ksh
+[type=link] /tmp=/dev/shmem
+[type=link] /usr/lib/ldqnx-64.so.2=/proc/boot/ldqnx-64.so.2
+
+# Shared runtime libraries from $QNX_TARGET/x86_64/lib
+libc.so
+libslog2.so
+libsecpol.so
+
+# Compiled binary security policy (read-only)
+[perms=0444]
+/proc/boot/secpol.bin = ./secpol.bin
+
+# System utilities & lab binaries
+[perms=0555]
+ksh
+on
+pidin
+ls
+cat
+slogger2
+slog2info
+devc-ser8250
+secpolpush
+secpol
+tracelogger
+traceprinter
+
+# Place the compiled lab resource manager (built from buggy_lidar_mgr.c or fixed_lidar_mgr.c)
+/proc/boot/lidar_mgr = ./lidar_mgr

@@ -1,0 +1,21 @@
+# Surgical Robot Draft Security Policy (Contains Syntax & Privilege Bugs)
+type kinematics_ctrl_t;
+type endoscope-dma_t;
+type imu_sensor_t;
+
+allow endoscope-dma_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    mem_phys
+    xprocess_able
+    trace
+};
+allow_attach endoscope-dma_t /dev/*;
+
+allow imu_sensor_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+};
+allow_attach imu_sensor_t /dev/imu_spi;

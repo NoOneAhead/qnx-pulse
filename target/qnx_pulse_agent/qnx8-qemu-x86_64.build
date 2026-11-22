@@ -1,0 +1,72 @@
+# QNX SDP 8.0 IFS Buildfile — QEMU x86_64 Instrumented Target with QNX-Pulse
+#
+# Build:
+#   secpolcompile -i qnxpulse.secpol -o build/secpol.bin
+#   mkifs -v qnx8-qemu-x86_64.build build/qnx8-qemu-x86_64.ifs
+#
+# Boot in QEMU x86_64:
+#   qemu-system-x86_64 -smp 2 -m 1G -nographic -kernel build/qnx8-qemu-x86_64.ifs
+#
+# Note on QNX SDP 8.0:
+#   procnto-smp-instr enables kernel instrumentation (TraceEvent/tracelogger)
+#   with superlocking enabled by default; legacy QNX 7 procnto -m superlock
+#   flags are removed and MUST NOT be passed.
+
+[virtual=x86_64,multiboot] boot = {
+    startup-x86 -v -D8250..115200
+    PATH=/proc/boot:/bin:/usr/bin LD_LIBRARY_PATH=/proc/boot:/lib:/usr/lib procnto-smp-instr -v
+}
+
+[+script] startup-script = {
+    display_msg "=== QNX SDP 8.0 QNX-Pulse Target Image (QEMU x86_64) ==="
+
+    # Enforce least-privilege mandatory access control policy before launching services
+    secpolpush -i /proc/boot/secpol.bin
+
+    # Start structured system logger and wait for /dev/slog2
+    slogger2 -b 64
+    waitfor /dev/slog2 5
+
+    # Serial console driver for QEMU -nographic
+    devc-ser8250 -e -b115200
+    waitfor /dev/ser1 5
+    reopen /dev/ser1
+
+    # Launch QNX-Pulse companion resource manager under initial secpol type
+    # qnxpulse_t as non-root UID:GID 120:120. After attaching /dev/qnxpulse,
+    # the agent transitions itself into stripped qnxpulse_run_t.
+    on -T qnxpulse_t -U 120:120 /proc/boot/qnx_pulse_agent &
+    waitfor /dev/qnxpulse 5
+    display_msg "QNX-Pulse agent active at /dev/qnxpulse (nonroot 120:120)"
+
+    # Interactive console shell
+    [+session] ksh &
+}
+
+# Standard runtime symlinks
+[type=link] /bin/sh=/proc/boot/ksh
+[type=link] /dev/console=/dev/ser1
+[type=link] /tmp=/dev/shmem
+[type=link] /usr/lib/ldqnx-64.so.2=/proc/boot/ldqnx-64.so.2
+
+# Required QNX 8.0 shared libraries
+libc.so
+libslog2.so
+libsecpol.so
+libm.so
+
+# Compiled security policy binary
+[perms=0444] secpol.bin=build/secpol.bin
+
+# Target executables
+[data=c]
+secpolpush
+slogger2
+slog2info
+devc-ser8250
+on
+ksh
+pidin
+tracelogger
+traceprinter
+qnx_pulse_agent=build/qnx_pulse_agent_x86_64

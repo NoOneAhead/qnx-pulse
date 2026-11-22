@@ -1,0 +1,6 @@
+Nov 19 14:22:10.001 lidar_fusion.41371 events* INFO 1 100 Attached /dev/lidar_fusion with _NTO_CHF_FIXED_PRIORITY
+Nov 19 14:22:10.002 adas_aeb.41370 aeb* INFO 1 200 Frame 1 completed in 1.65 ms (budget 10.00 ms)
+Nov 19 14:22:10.011 can_telemetry.41373 tele* WARNING 1 301 Burst compression started on CPU:01 (prio 30 RR)
+Nov 19 14:22:10.021 qnx_pulse_agent.41374 watchdog* WARNING 1 901 Priority inversion detected on /dev/lidar_fusion (rcvid=0x201, client_prio=52, server_prio=18)
+Nov 19 14:22:10.022 adas_aeb.41370 aeb* CRITICAL 1 299 DEADLINE MISS on Frame 2: 12.45 ms > 10.00 ms budget (+2.45 ms overrun)
+Nov 19 14:22:10.026 adas_aeb.41370 aeb* INFO 1 200 Frame 3 recovered in 1.78 ms (budget 10.00 ms)

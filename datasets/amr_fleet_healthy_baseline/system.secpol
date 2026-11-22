@@ -1,0 +1,31 @@
+# QNX SDP 8.0 Hardened AMR Robotics Security Policy (Grade A Reference)
+type slogger2_t;
+allow slogger2_t self:ability { nonroot pathspace public_channel };
+allow_attach slogger2_t /dev/slog2;
+
+type lidar_fusion_t;
+type lidar_fusion_run_t;
+on_type lidar_fusion_t run lidar_fusion_run_t;
+allow lidar_fusion_t self:ability { nonroot pathspace public_channel };
+allow_attach lidar_fusion_t /dev/lidar_fusion;
+allow lidar_fusion_run_t self:ability { nonroot };
+
+type motor_drive_mgr_t;
+type motor_drive_mgr_run_t;
+on_type motor_drive_mgr_t run motor_drive_mgr_run_t;
+allow motor_drive_mgr_t self:ability { nonroot pathspace public_channel mem_phys:0xfeb00000-0xfeb0ffff };
+allow_attach motor_drive_mgr_t /dev/motor_can;
+allow motor_drive_mgr_run_t self:ability { nonroot mem_phys:0xfeb00000-0xfeb0ffff };
+
+type motion_planner_t;
+allow motion_planner_t self:ability { nonroot priority };
+
+type fleet_telemetry_t;
+allow fleet_telemetry_t self:ability { nonroot };
+
+type qnxpulse_t;
+type qnxpulse_run_t;
+on_type qnxpulse_t run qnxpulse_run_t;
+allow qnxpulse_t self:ability { nonroot pathspace public_channel trace };
+allow_attach qnxpulse_t /dev/qnxpulse;
+allow qnxpulse_run_t self:ability { nonroot trace };

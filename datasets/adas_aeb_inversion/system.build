@@ -1,0 +1,35 @@
+# QNX SDP 8.0 Automotive ADAS ECU Buildfile (Pre-Audit / Contains Real Bugs!)
+[virtual=x86_64,multiboot] boot = {
+    startup-x86 -D 8250
+    PATH=/proc/boot:/system/bin
+    # Legacy QNX 7 superlocking flag -mL left over during migration
+    procnto-smp-instr -mL -v
+}
+
+[+script] startup-script = {
+    display_msg "Booting ADAS ECU (QNX 8.0)..."
+    slogger2 &
+    # BUG: lidar_fusion started BEFORE secpolpush and as unconfined root!
+    /proc/boot/lidar_fusion &
+
+    display_msg "Pushing security policy (too late!)..."
+    secpolpush -i /proc/boot/secpol.bin
+
+    on -T adas_aeb_t -U 110:110 /proc/boot/adas_aeb &
+    on -T brake_act_t -U 115:115 /proc/boot/brake_actuator &
+    /proc/boot/can_telemetry &
+    on -T qnxpulse_t -U 120:120 /proc/boot/qnx_pulse_agent &
+}
+
+[uid=0 gid=0]
+{
+    libc.so
+    ksh
+    secpolpush
+    slogger2
+    adas_aeb
+    lidar_fusion
+    brake_actuator
+    can_telemetry
+    qnx_pulse_agent
+}

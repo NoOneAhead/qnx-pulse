@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero-Jitter QNX 8.0 Codelab — Resource Managers, secpol &amp; Priority Inheritance</title>
+  <meta name="description" content="Hands-on 45-minute QNX SDP 8.0 Codelab: build a hardened /dev/lidar_fusion Resource Manager, enforce least-privilege secpol, trace procnto-smp-instr with tracelogger, and eliminate an ADAS AEB IPC priority inversion.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='2' y='2' width='24' height='24' rx='6' fill='%23070b14' stroke='%2300d4ff' stroke-width='2'/%3E%3Cpath d='M5 14h4.5L12 8l3.5 12 3-6H23' fill='none' stroke='%2300d4ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- =====================================================================
+       Top Navigation Bar
+       ===================================================================== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button id="menu-btn" class="menu-btn" type="button" aria-label="Toggle step navigation">☰</button>
+      <span class="brand-badge"><span class="brand-dot"></span>QNX SDP 8.0 Codelab</span>
+      <span class="topbar-title">Zero-Jitter QNX 8.0: Hardened Resource Manager &amp; Priority Inversion Hunt</span>
+    </div>
+    <div class="topbar-right">
+      <span class="pill-meta" title="Estimated duration">⏱ 45 min</span>
+      <span id="top-progress-pill" class="pill-meta">0 / 7 done</span>
+      <a class="topbar-btn" href="CODELAB.md" title="View standalone Markdown edition">Markdown</a>
+      <a class="topbar-btn primary" href="../" title="Open QNX-Pulse Studio Workbench">← QNX-Pulse Studio</a>
+      <button id="theme-toggle" class="topbar-btn" type="button" aria-label="Toggle theme">☀ Light</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <!-- ===================================================================
+         Left Step Navigator Sidebar
+         =================================================================== -->
+    <aside id="sidebar" class="sidebar" aria-label="Codelab steps">
+      <div class="sidebar-progress">
+        <div class="progress-header">
+          <span>PROGRESS</span>
+          <span id="progress-label">0 / 7 complete (0%)</span>
+        </div>
+        <div class="progress-track">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <ol class="step-nav">
+        <li class="step-nav-item">
+          <button class="step-nav-btn active" type="button" data-step="1">
+            <span class="step-num">1</span>
+            <span class="step-nav-text">
+              <span class="step-nav-title">Mission Briefing &amp; QNX 8.0 Architecture</span>
+              <span class="step-nav-time">5 min · ADAS AEB Context</span>
+            </span>
+          </button>
+        </li>
+        <li class="step-nav-item">
+          <button class="step-nav-btn" type="button" data-step="2">
+            <span class="step-num">2</span>
+            <span class="step-nav-text">
+              <span class="step-nav-title">Instrumented QNX 8.0 Boot Image</span>
+              <span class="step-nav-time">6 min · mkifs &amp; QEMU</span>
+            </span>
+          </button>
+        </li>
+        <li class="step-nav-item">
+          <button class="step-nav-btn" type="button" data-step="3">
+            <span class="step-num">3</span>
+            <span class="step-nav-text">
+              <span class="step-nav-title">Build /dev/lidar_fusion Manager</span>
+              <span class="step-nav-time">8 min · Hidden RT Bug</span>
+            </span>
+          </button>
+        </li>
+        <li class="step-nav-item">
+          <button class="step-nav-btn" type="button" data-step="4">
+            <span class="step-num">4</span>
+            <span class="step-nav-text">
+              <span class="step-nav-title">Least-Privilege QNX 8.0 secpol</span>
+              <span class="step-nav-time">7 min · MAC &amp; Abilities</span>
+            </span>
+          </button>
+        </li>
+        <li class="step-nav-item">
+          <button class="step-nav-btn" type="button" data-step="5">
+            <span class="step-num">5</span>
+            <span class="step-nav-text">
+              <span class="step-nav-title">Live Microkernel Kernel Trace</span>
+              <span class="step-nav-time">6 min · tracelogger &amp; slog2</span>
+            </span>
+          </button>
+        </li>
+        <li class="step-nav-item">
+          <button class="step-nav-btn" type="button" data-step="6">
+            <span class="step-num">6</span>
+            <span class="step-nav-text">
+              <span class="step-nav-title">Diagnose &amp; Fix Priority Inversion</span>
+              <span class="step-nav-time">8 min · Interactive Simulator</span>
+            </span>
+          </button>
+        </li>
+        <li class="step-nav-item">
+          <button class="step-nav-btn" type="button" data-step="7">
+            <span class="step-num">7</span>
+            <span class="step-nav-text">
+              <span class="step-nav-title">Verification, Quiz &amp; Next Steps</span>
+              <span class="step-nav-time">5 min · Knowledge Check</span>
+            </span>
+          </button>
+        </li>
+      </ol>
+
+      <div class="sidebar-footer">
+        <p class="sidebar-footer-title">Companion QNX 8.0 Lab Files</p>
+        <div class="lab-files-mini">
+          <a class="lab-file-chip" href="lab_files/lab.build" target="_blank">lab.build</a>
+          <a class="lab-file-chip" href="lab_files/lab.secpol" target="_blank">lab.secpol</a>
+          <a class="lab-file-chip" href="lab_files/buggy_lidar_mgr.c" target="_blank">buggy_lidar_mgr.c</a>
+          <a class="lab-file-chip" href="lab_files/fixed_lidar_mgr.c" target="_blank">fixed_lidar_mgr.c</a>
+          <a class="lab-file-chip" href="lab_files/Makefile" target="_blank">Makefile</a>
+        </div>
+      </div>
+    </aside>
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+    <!-- ===================================================================
+         Main Codelab Content Column
+         =================================================================== -->
+    <main class="main-content">
+      <div class="step-container">
+
+        <!-- ===============================================================
+             STEP 1: Mission Briefing & QNX 8.0 Architecture
+             =============================================================== -->
+        <section class="step-panel active" data-step="1" aria-label="Step 1: Mission Briefing">
+          <div class="step-hero">
+            <div class="step-kicker">
+              <span>Step 1 of 7</span>
+              <span class="step-tag">⏱ 5 min</span>
+              <span class="step-tag">ISO 26262 ASIL-D Context</span>
+              <span class="step-tag">QNX SDP 8.0</span>
+            </div>
+            <h1>Mission Briefing &amp; QNX 8.0 Real-Time Architecture</h1>
+            <p class="lead">
+              An Automotive Autonomous Emergency Braking (AEB) controller is missing its hard <strong>10.0 ms</strong>
+              braking deadline whenever CAN bus telemetry spikes. Your mission: build the hardened QNX 8.0 sensor
+              resource manager, trace the instrumented microkernel, expose a subtle IPC priority inversion caused by
+              <code>_NTO_CHF_FIXED_PRIORITY</code>, and restore deterministic <strong>1.4 ms</strong> response times.
+            </p>
+          </div>
+
+          <div class="content-card">
+            <h2>The Real-World Scenario: ADAS Emergency Braking Pipeline</h2>
+            <p>
+              In a production Software-Defined Vehicle (SDV), safety-critical control loops cannot share a monolithic
+              kernel address space with sensor drivers or diagnostics. QNX OS 8.0 isolates every device driver and
+              service into its own MMU-protected user-space process (a <strong>Resource Manager</strong>) communicating
+              through synchronous, kernel-mediated IPC (<code>MsgSend()</code> / <code>MsgReceive()</code> / <code>MsgReply()</code>).
+            </p>
+
+            <div class="spec-grid">
+              <div class="spec-card">
+                <div class="spec-label">Safety-Critical Client</div>
+                <div class="spec-value"><code>adas_aeb</code> (Prio 52)</div>
+                <div class="spec-sub">Hard 10.0 ms AEB brake deadline</div>
+              </div>
+              <div class="spec-card">
+                <div class="spec-label">Resource Manager</div>
+                <div class="spec-value"><code>/dev/lidar_fusion</code> (Base 18)</div>
+                <div class="spec-sub">0.9 ms point-cloud voxel fusion</div>
+              </div>
+              <div class="spec-card">
+                <div class="spec-label">Background Contender</div>
+                <div class="spec-value"><code>can_telemetry</code> (Prio 30)</div>
+                <div class="spec-sub">9.5 ms burst CAN frame logging</div>
+              </div>
+              <div class="spec-card">
+                <div class="spec-label">Security &amp; Trace</div>
+                <div class="spec-value"><code>secpol</code> + <code>tracelogger</code></div>
+                <div class="spec-sub">Zero-trust MAC + <code>.kev</code> capture</div>
+              </div>
+            </div>
+
+            <!-- Inline SVG System Architecture Diagram -->
+            <div class="diagram-box">
+              <svg viewBox="0 0 780 278" role="img" aria-label="QNX 8.0 ADAS AEB Microkernel and Resource Manager Architecture">
+                <defs>
+                  <marker id="arrCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+                  </marker>
+                  <marker id="arrGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981"/>
+                  </marker>
+                  <marker id="arrAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b"/>
+                  </marker>
+                </defs>
+
+                <!-- User Space Boundary -->
+                <rect x="14" y="12" width="752" height="162" rx="10" fill="#0d1522" stroke="#23364f" stroke-width="1.5" stroke-dasharray="6,4"/>
+                <text x="28" y="32" fill="#64748b" font-family="monospace" font-size="11" font-weight="700">USER SPACE (MMU-ISOLATED PROCESSES · QNX 8.0 SECPOL MAC ENFORCED)</text>
+
+                <!-- adas_aeb -->
+                <rect x="30" y="48" width="198" height="108" rx="8" fill="#0f2234" stroke="#38bdf8" stroke-width="1.6"/>
+                <text x="44" y="70" fill="#38bdf8" font-family="monospace" font-size="12.5" font-weight="700">adas_aeb</text>
+                <text x="44" y="88" fill="#cbd5e1" font-family="monospace" font-size="10.5">SCHED_FIFO · Prio 52</text>
+                <text x="44" y="106" fill="#94a3b8" font-family="monospace" font-size="10">Type: adas_aeb_t</text>
+                <text x="44" y="124" fill="#fb7185" font-family="monospace" font-size="10">Deadline: 10.0 ms</text>
+                <text x="44" y="142" fill="#94a3b8" font-family="monospace" font-size="10">read("/dev/lidar_fusion")</text>
+
+                <!-- lidar_fusion -->
+                <rect x="292" y="48" width="218" height="108" rx="8" fill="#0e2620" stroke="#10b981" stroke-width="1.6"/>
+                <text x="306" y="70" fill="#34d399" font-family="monospace" font-size="12.5" font-weight="700">/dev/lidar_fusion</text>
+                <text x="306" y="88" fill="#cbd5e1" font-family="monospace" font-size="10.5">lidar_mgr · Base Prio 18</text>
+                <text x="306" y="106" fill="#94a3b8" font-family="monospace" font-size="10">lidar_mgr_t → lidar_mgr_run_t</text>
+                <text x="306" y="124" fill="#fcd34d" font-family="monospace" font-size="10">0.9 ms voxel clustering</text>
+                <text x="306" y="142" fill="#94a3b8" font-family="monospace" font-size="10">ChannelCreate() + MsgReply()</text>
+
+                <!-- can_telemetry + slogger2 -->
+                <rect x="556" y="48" width="194" height="50" rx="8" fill="#291a10" stroke="#f59e0b" stroke-width="1.4"/>
+                <text x="570" y="69" fill="#fbbf24" font-family="monospace" font-size="11.5" font-weight="700">can_telemetry</text>
+                <text x="570" y="86" fill="#cbd5e1" font-family="monospace" font-size="10">Prio 30 · 9.5 ms burst</text>
+
+                <rect x="556" y="108" width="194" height="48" rx="8" fill="#171b2d" stroke="#818cf8" stroke-width="1.4"/>
+                <text x="570" y="129" fill="#a5b4fc" font-family="monospace" font-size="11.5" font-weight="700">slogger2 / tracelogger</text>
+                <text x="570" y="145" fill="#94a3b8" font-family="monospace" font-size="10">slog2info · /tmp/*.kev</text>
+
+                <!-- IPC Arrows -->
+                <line x1="228" y1="86" x2="290" y2="86" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrCyan)"/>
+                <text x="259" y="79" fill="#38bdf8" font-family="monospace" font-size="9.5" text-anchor="middle">MsgSend</text>
+                <line x1="292" y1="118" x2="230" y2="118" stroke="#10b981" stroke-width="2" marker-end="url(#arrGreen)"/>
+                <text x="261" y="132" fill="#34d399" font-family="monospace" font-size="9.5" text-anchor="middle">MsgReply</text>
+
+                <line x1="510" y1="132" x2="554" y2="132" stroke="#818cf8" stroke-width="1.4" stroke-dasharray="3,2"/>
+
+                <!-- Microkernel Band -->
+                <rect x="14" y="190" width="752" height="74" rx="10" fill="#101a2a" stroke="#00d2ff" stroke-width="1.8"/>
+                <text x="28" y="213" fill="#00d2ff" font-family="monospace" font-size="12.5" font-weight="700">QNX OS 8.0 INSTRUMENTED MICROKERNEL — procnto-smp-instr (Superlocked by Default)</text>
+                <text x="28" y="234" fill="#cbd5e1" font-family="monospace" font-size="10.5">• Preemptive Priority Scheduler (PI boosts server 18 → 52 unless _NTO_CHF_FIXED_PRIORITY is set)</text>
+                <text x="28" y="252" fill="#94a3b8" font-family="monospace" font-size="10.5">• secpol MAC Engine (secpolpush /proc/boot/secpol.bin)  • SAT Kernel Trace Ring Buffer (TraceEvent)</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>Why Four QNX 8.0 Pillars Matter for ISO 26262</h2>
+            <ul>
+              <li><strong>Microkernel Fault Isolation:</strong> A bug or memory corruption in <code>/dev/lidar_fusion</code> cannot panic the kernel or overwrite <code>adas_aeb</code>'s address space.</li>
+              <li><strong>POSIX Resource Managers:</strong> Hardware sensors expose standard file paths (<code>open()</code>, <code>read()</code>, <code>devctl()</code>) backed by high-speed synchronous <code>MsgSend()</code> IPC channels.</li>
+              <li><strong>Synchronous IPC Priority Inheritance (PI):</strong> By default, when a priority-52 client blocks in <code>MsgSend()</code> waiting on a priority-18 server, the QNX 8.0 microkernel transparently elevates the server thread to priority 52 until <code>MsgReply()</code>—eliminating unbounded priority inversion.</li>
+              <li><strong><code>secpol</code> Mandatory Access Control &amp; Abilities:</strong> Instead of running drivers as root (UID 0), QNX 8.0 grants fine-grained abilities (<code>pathspace</code>, <code>public_channel</code>) only during initialization, then permanently strips them at runtime via <code>secpol_transition_type()</code> and <code>procmgr_ability(..., PROCMGR_AOP_LOCK)</code>.</li>
+            </ul>
+          </div>
+
+          <div class="content-card">
+            <h2>Prerequisites &amp; Lab Environment</h2>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Version / Source</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>QNX SDP 8.0</strong></td>
+                  <td>Free non-commercial license via <a href="https://www.qnx.com/products/everywhere/" target="_blank" rel="noopener">QNX Everywhere</a></td>
+                  <td>Provides <code>qcc</code>, <code>mkifs</code>, <code>secpolcompile</code>, <code>procnto-smp-instr</code>, target libraries</td>
+                </tr>
+                <tr>
+                  <td><strong>QEMU x86_64</strong> (or Raspberry Pi 5)</td>
+                  <td><code>qemu-system-x86_64</code> 8.x+</td>
+                  <td>Boots your custom QNX 8.0 multiboot IFS image without extra hardware</td>
+                </tr>
+                <tr>
+                  <td><strong>QNX-Pulse Workbench</strong></td>
+                  <td>Local CLI &amp; Web Studio (<code>qnx-pulse</code>)</td>
+                  <td>Visualizes <code>traceprinter</code> timelines, detects IPC priority inversions, audits <code>.build</code> &amp; <code>.secpol</code></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">Host Shell — Initialize QNX SDP 8.0 Environment</span>
+                  <span class="code-lang">bash</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="bash"># Linux / macOS host:
+source ~/qnx800/qnxsdp-env.sh
+
+# Windows PowerShell / CMD host:
+# call %USERPROFILE%\qnx800\qnxsdp-env.bat
+
+# Verify toolchain &amp; enter the companion lab_files directory
+qcc -V
+cd codelab/lab_files</code></pre>
+            </div>
+
+            <div class="callout">
+              <div class="callout-title">No QNX SDP 8.0 Installed Yet?</div>
+              <p>
+                You can complete the entire walkthrough—including the live <strong>Priority Inheritance Microkernel Simulator</strong>
+                in Step 6 and the comprehension quiz in Step 7—directly inside this browser right now. When your QNX Everywhere
+                toolchain is ready, every single file in <code>codelab/lab_files/</code> compiles out of the box with <code>make</code>.
+              </p>
+            </div>
+          </div>
+
+          <div class="step-footer">
+            <button class="nav-btn" type="button" data-nav-prev disabled>← Previous</button>
+            <span class="nav-kbd-hint">Tip: Use ← / → arrow keys to navigate</span>
+            <button class="nav-btn primary" type="button" data-nav-next>Mark Complete &amp; Next: Boot Image →</button>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             STEP 2: Craft an Instrumented QNX 8.0 QEMU Boot Image (mkifs)
+             =============================================================== -->
+        <section class="step-panel" data-step="2" aria-label="Step 2: Craft Boot Image">
+          <div class="step-hero">
+            <div class="step-kicker">
+              <span>Step 2 of 7</span>
+              <span class="step-tag">⏱ 6 min</span>
+              <span class="step-tag">mkifs · IFS</span>
+              <span class="step-tag">lab_files/lab.build</span>
+            </div>
+            <h1>Craft an Instrumented QNX 8.0 QEMU Boot Image (<code>mkifs</code>)</h1>
+            <p class="lead">
+              A QNX OS 8.0 target boots from an <strong>Image File System (IFS)</strong> assembled by <code>mkifs</code>
+              from a declarative <code>.build</code> file. Here we boot the <strong>instrumented SMP microkernel</strong>
+              (<code>procnto-smp-instr</code>), enforce our compiled security policy at boot, and bring up <code>slogger2</code>
+              and <code>/dev/lidar_fusion</code> as unprivileged, type-confined services.
+            </p>
+          </div>
+
+          <div class="content-card">
+            <h2>QNX 8.0 Buildfile: <code>lab_files/lab.build</code></h2>
+            <p>
+              Inspect the complete buildfile below (also saved in <a href="lab_files/lab.build" target="_blank"><code>lab_files/lab.build</code></a>).
+              Pay close attention to the boot order inside <code>[+script] startup-script</code>: security policy enforcement
+              comes <strong>first</strong>, before any service starts.
+            </p>
+
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">lab_files/lab.build</span>
+                  <span class="code-lang">build</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="build">[virtual=x86_64,multiboot] boot = {
+    # Serial console on COM1 (0x3f8) for headless QEMU (-nographic / -serial mon:stdio)
+    startup-x86 -D 8250
+
+    # QNX 8.0 NOTE: Kernel superlocking is ENABLED BY DEFAULT in QNX OS 8.0.
+    # Legacy QNX 7 superlocking flags to procnto are obsolete and omitted here.
+    # Use procnto-smp-instr (instrumented microkernel) so tracelogger can record
+    # kernel trace events (.kev) for real-time analysis.
+    PATH=/proc/boot:/bin:/usr/bin LD_LIBRARY_PATH=/proc/boot:/lib:/usr/lib procnto-smp-instr -v
+}
+
+[+script] startup-script = {
+    PATH=/proc/boot:/bin:/usr/bin
+    LD_LIBRARY_PATH=/proc/boot:/lib:/usr/lib
+
+    display_msg "=========================================================="
+    display_msg "  QNX 8.0 Zero-Jitter ADAS AEB Lab (Instrumented + Secpol)"
+    display_msg "=========================================================="
+
+    # 1. Push the compiled Mandatory Access Control (MAC) security policy into
+    #    procnto BEFORE launching any services. Requires PROCMGR_AID_MAC_POLICY.
+    #    Default path is /proc/boot/secpol.bin when omitted.
+    secpolpush /proc/boot/secpol.bin
+
+    # 2. Launch structured system logger (slogger2) under its confined type
+    #    and non-root UID/GID (20:20).
+    on -T slogger2_t -u 20:20 slogger2
+    waitfor /dev/slog2 3
+
+    # 3. Start serial driver for QEMU console I/O
+    on -T console_t devc-ser8250 -e -b115200 0x3f8^0.4 &amp;
+    waitfor /dev/ser1 3
+    reopen /dev/ser1
+
+    # 4. Launch our hardened /dev/lidar_fusion Resource Manager under its
+    #    startup type (lidar_mgr_t) and unprivileged UID/GID (100:100).
+    #    After resmgr_attach(), it transitions to lidar_mgr_run_t!
+    on -T lidar_mgr_t -u 100:100 lidar_mgr &amp;
+    waitfor /dev/lidar_fusion 3
+
+    display_msg "[BOOT] /dev/lidar_fusion online. Launching interactive ksh..."
+    ksh
+}
+
+# Standard POSIX symlinks inside the IFS
+[type=link] /bin/sh=/proc/boot/ksh
+[type=link] /tmp=/dev/shmem
+[type=link] /usr/lib/ldqnx-64.so.2=/proc/boot/ldqnx-64.so.2
+
+# Shared runtime libraries from $QNX_TARGET/x86_64/lib
+libc.so
+libslog2.so
+libsecpol.so
+
+# Compiled binary security policy (read-only)
+[perms=0444]
+/proc/boot/secpol.bin = ./secpol.bin
+
+# System utilities &amp; lab binaries
+[perms=0555]
+ksh
+on
+pidin
+ls
+cat
+slogger2
+slog2info
+devc-ser8250
+secpolpush
+secpol
+tracelogger
+traceprinter
+
+# Place the compiled lab resource manager (built from buggy_lidar_mgr.c or fixed_lidar_mgr.c)
+/proc/boot/lidar_mgr = ./lidar_mgr</code></pre>
+            </div>
+
+            <div class="callout">
+              <div class="callout-title">QNX 8.0 Migration Highlight — Superlocking &amp; secpolpush</div>
+              <ul>
+                <li><strong>Default Superlocking:</strong> Unlike QNX 7.x where engineers manually tuned <code>procnto</code> superlocking memory flags (e.g., <code>-m</code> variants), <strong>QNX OS 8.0 superlocks the kernel by default</strong> so physical memory pages stay deterministic without legacy flags.</li>
+                <li><strong>Instrumented Kernel:</strong> Standard production images use <code>procnto-smp</code>. During performance analysis, swap in <code>procnto-smp-instr</code> so <code>tracelogger</code> can hook kernel scheduler and IPC tracepoints.</li>
+                <li><strong><code>secpolpush</code> vs <code>secpol -i</code>:</strong> In QNX SDP 8.0, <code>secpolpush</code> takes the compiled policy as an optional positional path (<code>secpolpush /proc/boot/secpol.bin</code>, defaulting to <code>/proc/boot/secpol.bin</code>). Use the companion target tool <code>secpol -i /proc/boot/secpol.bin</code> to inspect a compiled policy blob.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>Build the IFS &amp; Boot in QEMU x86_64</h2>
+            <p>
+              Once you compile <code>secpol.bin</code> (Step 4) and <code>lidar_mgr</code> (Step 3), assemble the bootable
+              image with <code>mkifs</code> and launch QEMU directly via its multiboot <code>-kernel</code> loader:
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">Assemble IFS &amp; Launch QEMU x86_64</span>
+                  <span class="code-lang">bash</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="bash"># Assemble the multiboot QNX 8.0 Image File System
+mkifs -v lab.build ifs-lab-buggy.bin
+
+# Boot directly in QEMU (2 vCPUs, 512 MB RAM, COM1 serial console on stdio)
+# Press Ctrl-A then X to exit QEMU cleanly.
+qemu-system-x86_64 \
+  -m 512M \
+  -smp 2 \
+  -nographic \
+  -serial mon:stdio \
+  -no-reboot \
+  -kernel ifs-lab-buggy.bin</code></pre>
+            </div>
+            <p>
+              <strong>Using a Raspberry Pi 5 (<code>aarch64le</code>)?</strong> Use the official QNX 8.0 Raspberry Pi 5
+              BSP boot image, cross-compile with <code>make ARCH=aarch64le buggy</code>, and copy <code>lidar_mgr</code> +
+              <code>secpol.bin</code> onto your SD card or over <code>scp</code>.
+            </p>
+          </div>
+
+          <div class="step-footer">
+            <button class="nav-btn" type="button" data-nav-prev>← Step 1: Briefing</button>
+            <span class="nav-kbd-hint">Step 2 / 7</span>
+            <button class="nav-btn primary" type="button" data-nav-next>Mark Complete &amp; Next: Resource Manager →</button>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             STEP 3: Write the /dev/lidar_fusion Resource Manager
+             =============================================================== -->
+        <section class="step-panel" data-step="3" aria-label="Step 3: Resource Manager">
+          <div class="step-hero">
+            <div class="step-kicker">
+              <span>Step 3 of 7</span>
+              <span class="step-tag">⏱ 8 min</span>
+              <span class="step-tag">qcc · resmgr_attach</span>
+              <span class="step-tag">lab_files/buggy_lidar_mgr.c</span>
+            </div>
+            <h1>Write the <code>/dev/lidar_fusion</code> Resource Manager (with a Hidden Real-Time Bug)</h1>
+            <p class="lead">
+              Every QNX device path like <code>/dev/lidar_fusion</code> is simply a user-space process attached to the
+              <code>procnto</code> pathname prefix tree. Let's build our sensor fusion server using authentic QNX 8.0 APIs—and
+              plant the exact one-flag mistake that breaks priority inheritance in real automotive codebases.
+            </p>
+          </div>
+
+          <div class="content-card">
+            <h2>How a QNX Resource Manager Serves <code>read()</code></h2>
+            <ol>
+              <li>Client <code>adas_aeb</code> (priority 52) calls POSIX <code>read(fd, &amp;frame, sizeof(frame))</code>.</li>
+              <li><code>libc</code> marshals an <code>_IO_READ</code> message and invokes kernel <code>MsgSend()</code> on the channel attached to <code>/dev/lidar_fusion</code>.</li>
+              <li><code>adas_aeb</code> enters kernel state <strong><code>THREPLY</code></strong> (reply-blocked) while our server wakes from <code>dispatch_block()</code> and invokes <code>io_read()</code>.</li>
+              <li><code>io_read()</code> validates permissions via <code>iofunc_read_verify()</code>, performs 0.9 ms of LiDAR voxel clustering, returns the obstacle frame via <code>MsgReply()</code>, and returns <code>_RESMGR_NOREPLY</code> so the framework doesn't double-reply.</li>
+            </ol>
+
+            <div class="callout danger">
+              <div class="callout-title">Spot the Hidden Real-Time Trap in main()</div>
+              <p>
+                Notice how <code>buggy_lidar_mgr.c</code> creates a custom channel with
+                <code>ChannelCreate(_NTO_CHF_FIXED_PRIORITY | _NTO_CHF_UNBLOCK | _NTO_CHF_DISCONNECT)</code> and hands
+                it to <code>dispatch_create_channel(chid, 0)</code>. Adding <strong><code>_NTO_CHF_FIXED_PRIORITY</code></strong>
+                instructs the QNX 8.0 microkernel to <strong>disable synchronous IPC priority inheritance</strong> on that channel!
+              </p>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>Complete Source: <code>lab_files/buggy_lidar_mgr.c</code></h2>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">lab_files/buggy_lidar_mgr.c</span>
+                  <span class="code-lang">c</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="c">#include &lt;errno.h&gt;
+#include &lt;sched.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;time.h&gt;
+#include &lt;unistd.h&gt;
+
+#include &lt;sys/dispatch.h&gt;
+#include &lt;sys/iofunc.h&gt;
+#include &lt;sys/neutrino.h&gt;
+#include &lt;sys/procmgr.h&gt;
+#include &lt;sys/slog2.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;secpol/secpol.h&gt;
+
+#define LIDAR_DEV_PATH        "/dev/lidar_fusion"
+#define LIDAR_BASE_PRIO       18
+#define FUSION_WORK_NS        900000ULL /* 0.9 ms deterministic voxel clustering budget */
+
+typedef struct {
+    uint32_t frame_seq;
+    uint64_t timestamp_ns;
+    float    nearest_obstacle_m;
+    float    closing_vel_mps;
+    uint8_t  aeb_trigger;
+    int32_t  server_prio_at_reply;
+} lidar_obstacle_frame_t;
+
+static slog2_buffer_t g_slog_buf = NULL;
+static uint32_t       g_frame_seq = 0;
+
+static uint64_t now_monotonic_ns(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &amp;ts);
+    return ((uint64_t)ts.tv_sec * 1000000000ULL) + (uint64_t)ts.tv_nsec;
+}
+
+static void run_voxel_clustering_work(uint64_t duration_ns) {
+    volatile uint64_t accum = 0;
+    uint64_t start_ns = now_monotonic_ns();
+    while ((now_monotonic_ns() - start_ns) &lt; duration_ns) {
+        for (int i = 0; i &lt; 64; ++i) {
+            accum += (uint64_t)(i * 17U) ^ (accum &gt;&gt; 3);
+        }
+    }
+    (void)accum;
+}
+
+static int init_slog2(void) {
+    slog2_buffer_set_config_t cfg;
+    memset(&amp;cfg, 0, sizeof(cfg));
+    cfg.buffer_set_name              = "lidar_fusion";
+    cfg.num_buffers                  = 1;
+    cfg.verbosity_level              = SLOG2_INFO;
+    cfg.buffer_config[0].buffer_name = "main";
+    cfg.buffer_config[0].num_pages   = 4;
+    if (slog2_register(&amp;cfg, &amp;g_slog_buf, 0) == -1) {
+        perror("slog2_register");
+        return -1;
+    }
+    slog2_set_default_buffer(g_slog_buf);
+    return 0;
+}
+
+static int drop_startup_privileges(void) {
+    if (secpol_transition_type(NULL, "run", 0) == -1) {
+        slog2f(g_slog_buf, 100, SLOG2_WARNING,
+               "secpol_transition_type('run') skipped/failed: %s (errno=%d); applying procmgr_ability lock",
+               strerror(errno), errno);
+    } else {
+        slog2f(g_slog_buf, 100, SLOG2_INFO,
+               "secpol transition succeeded: lidar_mgr_t -&gt; lidar_mgr_run_t");
+    }
+
+    if (procmgr_ability(
+            0,
+            PROCMGR_ADN_NONROOT | PROCMGR_AOP_DENY | PROCMGR_AOP_LOCK | PROCMGR_AID_PATHSPACE,
+            PROCMGR_ADN_NONROOT | PROCMGR_AOP_DENY | PROCMGR_AOP_LOCK | PROCMGR_AID_PUBLIC_CHANNEL,
+            PROCMGR_ADN_NONROOT | PROCMGR_AOP_DENY | PROCMGR_AOP_LOCK | PROCMGR_AID_FORK,
+            PROCMGR_ADN_NONROOT | PROCMGR_AOP_DENY | PROCMGR_AOP_LOCK | PROCMGR_AID_SPAWN,
+            PROCMGR_ADN_ROOT    | PROCMGR_AOP_DENY | PROCMGR_AOP_LOCK | PROCMGR_AID_EOL) == -1) {
+        slog2f(g_slog_buf, 101, SLOG2_ERROR,
+               "procmgr_ability lock failed: %s", strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+static int io_read(resmgr_context_t *ctp, io_read_t *msg, RESMGR_OCB_T *ocb) {
+    int status = iofunc_read_verify(ctp, msg, ocb, NULL);
+    if (status != EOK) {
+        return status;
+    }
+    if ((msg-&gt;i.xtype &amp; _IO_XTYPE_MASK) != _IO_XTYPE_NONE) {
+        return ENOSYS;
+    }
+
+    run_voxel_clustering_work(FUSION_WORK_NS);
+
+    /* Query effective priority while servicing adas_aeb (prio 52) */
+    struct sched_param sp;
+    memset(&amp;sp, 0, sizeof(sp));
+    SchedGet(0, 0, &amp;sp);
+
+    lidar_obstacle_frame_t frame;
+    frame.frame_seq            = ++g_frame_seq;
+    frame.timestamp_ns         = now_monotonic_ns();
+    frame.nearest_obstacle_m   = 14.2f;
+    frame.closing_vel_mps      = 18.5f;
+    frame.aeb_trigger          = 1U;
+    frame.server_prio_at_reply = sp.sched_priority;
+
+    size_t nbytes = sizeof(frame);
+    if (msg-&gt;i.nbytes &lt; nbytes) {
+        nbytes = msg-&gt;i.nbytes;
+    }
+
+    slog2f(g_slog_buf, 200, SLOG2_INFO,
+           "frame=%u reply_prio=%d obstacle=%.1fm aeb=%u (FIXED_PRIORITY BUG ACTIVE)",
+           frame.frame_seq, frame.server_prio_at_reply,
+           frame.nearest_obstacle_m, frame.aeb_trigger);
+
+    if (MsgReply(ctp-&gt;rcvid, (int)nbytes, &amp;frame, nbytes) == -1) {
+        return errno;
+    }
+    ocb-&gt;attr-&gt;flags |= IOFUNC_ATTR_ATIME | IOFUNC_ATTR_DIRTY_TIME;
+    return _RESMGR_NOREPLY;
+}
+
+int main(void) {
+    if (init_slog2() != 0) {
+        return EXIT_FAILURE;
+    }
+
+    struct sched_param sp;
+    memset(&amp;sp, 0, sizeof(sp));
+    sp.sched_priority = LIDAR_BASE_PRIO;
+    if (SchedSet(0, 0, SCHED_FIFO, &amp;sp) == -1) {
+        slog2f(g_slog_buf, 102, SLOG2_WARNING,
+               "SchedSet(prio=%d) failed: %s (continuing with inherited priority)",
+               LIDAR_BASE_PRIO, strerror(errno));
+    }
+
+    /* REAL-TIME BUG: _NTO_CHF_FIXED_PRIORITY disables QNX IPC priority inheritance! */
+    int chid = ChannelCreate(_NTO_CHF_FIXED_PRIORITY | _NTO_CHF_UNBLOCK | _NTO_CHF_DISCONNECT);
+    if (chid == -1) {
+        perror("ChannelCreate");
+        return EXIT_FAILURE;
+    }
+
+    dispatch_t *dpp = dispatch_create_channel(chid, 0);
+    if (dpp == NULL) {
+        perror("dispatch_create_channel");
+        return EXIT_FAILURE;
+    }
+
+    resmgr_connect_funcs_t connect_funcs;
+    resmgr_io_funcs_t      io_funcs;
+    iofunc_attr_t          attr;
+    resmgr_attr_t          resmgr_attr;
+
+    memset(&amp;resmgr_attr, 0, sizeof(resmgr_attr));
+    resmgr_attr.nparts_max   = 1;
+    resmgr_attr.msg_max_size = 2048;
+
+    iofunc_func_init(_RESMGR_CONNECT_NFUNCS, &amp;connect_funcs,
+                     _RESMGR_IO_NFUNCS, &amp;io_funcs);
+    io_funcs.read = io_read;
+
+    iofunc_attr_init(&amp;attr, S_IFCHR | 0444, NULL, NULL);
+    attr.nbytes = sizeof(lidar_obstacle_frame_t);
+
+    if (resmgr_attach(dpp, &amp;resmgr_attr, LIDAR_DEV_PATH, _FTYPE_ANY, 0,
+                      &amp;connect_funcs, &amp;io_funcs, &amp;attr) == -1) {
+        perror("resmgr_attach");
+        return EXIT_FAILURE;
+    }
+
+    if (drop_startup_privileges() != 0) {
+        return EXIT_FAILURE;
+    }
+
+    slog2f(g_slog_buf, 103, SLOG2_WARNING,
+           "Mounted %s (base_prio=%d, flags=_NTO_CHF_FIXED_PRIORITY — PI DISABLED!)",
+           LIDAR_DEV_PATH, LIDAR_BASE_PRIO);
+
+    dispatch_context_t *ctp = dispatch_context_alloc(dpp);
+    if (ctp == NULL) {
+        perror("dispatch_context_alloc");
+        return EXIT_FAILURE;
+    }
+
+    for (;;) {
+        if ((ctp = dispatch_block(ctp)) == NULL) {
+            perror("dispatch_block");
+            return EXIT_FAILURE;
+        }
+        dispatch_handler(ctp);
+    }
+    return EXIT_SUCCESS;
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>Cross-Compile with QNX 8.0 <code>qcc</code></h2>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">Compile for x86_64 (QEMU) or aarch64le (Raspberry Pi 5)</span>
+                  <span class="code-lang">bash</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="bash"># Compile for QEMU x86_64 target:
+qcc -Vgcc_ntox86_64 -Wall -Wextra -O2 -std=gnu11 \
+    -o lidar_mgr buggy_lidar_mgr.c -lslog2 -lsecpol
+
+# Or cross-compile for Raspberry Pi 5 (64-bit ARM):
+qcc -Vgcc_ntoaarch64le -Wall -Wextra -O2 -std=gnu11 \
+    -o lidar_mgr buggy_lidar_mgr.c -lslog2 -lsecpol
+
+# Or simply use the provided Makefile:
+make buggy</code></pre>
+            </div>
+          </div>
+
+          <div class="step-footer">
+            <button class="nav-btn" type="button" data-nav-prev>← Step 2: Boot Image</button>
+            <span class="nav-kbd-hint">Step 3 / 7</span>
+            <button class="nav-btn primary" type="button" data-nav-next>Mark Complete &amp; Next: secpol →</button>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             STEP 4: Lock Down Least-Privilege Security with QNX 8.0 secpol
+             =============================================================== -->
+        <section class="step-panel" data-step="4" aria-label="Step 4: Security Policy">
+          <div class="step-hero">
+            <div class="step-kicker">
+              <span>Step 4 of 7</span>
+              <span class="step-tag">⏱ 7 min</span>
+              <span class="step-tag">secpolcompile · secpolpush</span>
+              <span class="step-tag">lab_files/lab.secpol</span>
+            </div>
+            <h1>Lock Down Least-Privilege Security with QNX 8.0 <code>secpol</code></h1>
+            <p class="lead">
+              A safety-critical ADAS system must also be <strong>cyber-resilient</strong> (ISO/SAE 21434). Rather than
+              running <code>lidar_mgr</code> as root, QNX 8.0 lets us enforce a Mandatory Access Control (MAC) policy
+              that grants <code>pathspace</code> and <code>public_channel</code> <em>only</em> during startup—then
+              irreversibly transitions the process into a stripped-down runtime type.
+            </p>
+          </div>
+
+          <div class="content-card">
+            <h2>Two-Phase Least-Privilege Lifecycle</h2>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Phase</th>
+                  <th>QNX Security Type</th>
+                  <th>Granted Abilities</th>
+                  <th>Allowed Operations</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1. Initialization</strong><br>(before event loop)</td>
+                  <td><code>lidar_mgr_t</code></td>
+                  <td><code>nonroot</code>, <code>pathspace</code>, <code>public_channel</code>, <code>settypeid:lidar_mgr_run_t</code></td>
+                  <td>Create channel, attach strictly to <code>/dev/lidar_fusion</code>, register <code>slog2</code>, transition to <code>"run"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>2. Steady-State</strong><br>(handling untrusted frames)</td>
+                  <td><code>lidar_mgr_run_t</code></td>
+                  <td><code>nonroot</code> only (+ <code>PROCMGR_AOP_LOCK</code>)</td>
+                  <td>Reply on existing IPC channel &amp; write logs. Cannot register <code>/dev/*</code>, spawn shells, fork, or touch hardware I/O</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="content-card">
+            <h2>Policy Definition: <code>lab_files/lab.secpol</code></h2>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">lab_files/lab.secpol</span>
+                  <span class="code-lang">secpol</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="secpol"># 1. Declare Security Types
+type default;
+type slogger2_t;
+type console_t;
+type lidar_mgr_t;
+type lidar_mgr_run_t;
+type adas_aeb_t;
+type can_telem_t;
+type tracer_t;
+
+# 2. Path Space Attachment Rules (strictly scoped to exact device paths)
+allow_attach slogger2_t /dev/slog2;
+allow_attach console_t /dev/ser1;
+allow_attach lidar_mgr_t /dev/lidar_fusion;
+
+# 3. Core Infrastructure Types
+allow default self:ability {
+    nonroot
+    spawn_setuid
+    settypeid:slogger2_t,console_t,lidar_mgr_t,adas_aeb_t,can_telem_t,tracer_t
+};
+
+allow slogger2_t self:ability { nonroot pathspace public_channel mem_phys };
+allow console_t self:ability  { nonroot pathspace public_channel io interrupt };
+
+# 4. /dev/lidar_fusion Startup -&gt; Runtime Privilege Split
+allow lidar_mgr_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    settypeid:lidar_mgr_run_t
+};
+
+# Maps secpol_transition_type(NULL, "run", 0) from lidar_mgr_t -&gt; lidar_mgr_run_t
+derive_type lidar_mgr_t run lidar_mgr_run_t;
+
+# Minimal steady-state runtime abilities (zero pathspace, zero spawn/fork)
+allow lidar_mgr_run_t self:ability {
+    nonroot
+};
+
+allow lidar_mgr_t slogger2_t:channel connect;
+allow lidar_mgr_run_t slogger2_t:channel connect;
+
+# 5. ADAS Clients &amp; Kernel Trace Capture Permissions
+allow adas_aeb_t self:ability  { nonroot priority:1-63 };
+allow adas_aeb_t lidar_mgr_t:channel connect;
+allow adas_aeb_t lidar_mgr_run_t:channel connect;
+allow adas_aeb_t slogger2_t:channel connect;
+
+allow can_telem_t self:ability { nonroot priority:1-35 };
+allow can_telem_t slogger2_t:channel connect;
+
+# Only tracer_t holds the trace ability (PROCMGR_AID_TRACE) for tracelogger
+allow tracer_t self:ability    { nonroot trace };
+allow tracer_t slogger2_t:channel connect;</code></pre>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>Compile, Push &amp; Verify Runtime Privilege Drop</h2>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">Host Compile &amp; Target Inspection</span>
+                  <span class="code-lang">bash</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="bash"># On Host: compile text policy -&gt; binary secpol.bin embedded into IFS
+secpolcompile -o secpol.bin lab.secpol
+
+# On Target (executed early inside startup-script):
+secpolpush /proc/boot/secpol.bin
+
+# On Target ksh: inspect active policy &amp; verify lidar_mgr transitioned to lidar_mgr_run_t!
+secpol -i /proc/boot/secpol.bin
+pidin -p lidar_mgr -F "%a %N %u %t"</code></pre>
+            </div>
+
+            <div class="callout success">
+              <div class="callout-title">Defense-in-Depth: secpol_transition_type() + procmgr_ability()</div>
+              <p>
+                Inside <code>drop_startup_privileges()</code>, we pair <code>secpol_transition_type(NULL, "run", 0)</code>
+                with <code>procmgr_ability(0, ... PROCMGR_AOP_DENY | PROCMGR_AOP_LOCK ... PROCMGR_AID_EOL)</code>. Even
+                in an engineering bench image where <code>secpol</code> is temporarily bypassed, <code>PROCMGR_AOP_LOCK</code>
+                makes the denied abilities <strong>permanently immutable</strong> for the lifetime of the process!
+              </p>
+            </div>
+          </div>
+
+          <div class="step-footer">
+            <button class="nav-btn" type="button" data-nav-prev>← Step 3: Resource Manager</button>
+            <span class="nav-kbd-hint">Step 4 / 7</span>
+            <button class="nav-btn primary" type="button" data-nav-next>Mark Complete &amp; Next: Kernel Trace →</button>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             STEP 5: Capture a Live Microkernel Trace
+             =============================================================== -->
+        <section class="step-panel" data-step="5" aria-label="Step 5: Kernel Trace">
+          <div class="step-hero">
+            <div class="step-kicker">
+              <span>Step 5 of 7</span>
+              <span class="step-tag">⏱ 6 min</span>
+              <span class="step-tag">tracelogger · traceprinter</span>
+              <span class="step-tag">slog2info</span>
+            </div>
+            <h1>Capture a Live Microkernel Trace with <code>tracelogger</code> &amp; <code>traceprinter</code></h1>
+            <p class="lead">
+              Never guess at real-time jitter with <code>printf()</code>! QNX 8.0's System Analysis Toolkit (SAT)
+              records every thread dispatch, IPC message handoff, and preemption inside <code>procnto-smp-instr</code>
+              with nanosecond cycle accuracy into a binary <code>.kev</code> trace file.
+            </p>
+          </div>
+
+          <div class="content-card">
+            <h2>1. Record a 5-Second Kernel Trace &amp; Structured Logs</h2>
+            <p>
+              In the QEMU target shell (<code>ksh</code>), launch <code>tracelogger</code> under the confined
+              <code>tracer_t</code> type (which holds <code>PROCMGR_AID_TRACE</code>), convert the binary capture with
+              <code>traceprinter</code>, and dump <code>slogger2</code> telemetry with symbolic severities and thread IDs:
+            </p>
+
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">Target QNX 8.0 Shell (ksh) — Capture Trace &amp; slog2</span>
+                  <span class="code-lang">bash</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="bash"># Capture up to 4 iterations / 5 seconds into /tmp/adas_aeb.kev (/dev/shmem)
+on -T tracer_t tracelogger -f /tmp/adas_aeb.kev -n 4 -s 5
+
+# Decode the raw binary .kev file into a human- &amp; parser-readable event stream
+traceprinter -f /tmp/adas_aeb.kev &gt; /tmp/adas_aeb.trace.txt
+
+# Inspect structured daemon logs (-S prints severity names, -t prints Thread ID)
+slog2info -S -t -b lidar_fusion</code></pre>
+            </div>
+
+            <div class="callout warning">
+              <div class="callout-title">Key CLI Flags to Remember</div>
+              <ul>
+                <li><code>tracelogger -f /tmp/adas_aeb.kev -n 4 -s 5</code>: writes to <code>/tmp</code> (RAM-backed <code>/dev/shmem</code> so disk I/O never perturbs timing), caps capture at 4 buffer iterations or 5 seconds.</li>
+                <li><code>slog2info -S -t</code>: <code>-S</code> displays symbolic severity levels (<code>SLOG2_INFO</code>, <code>SLOG2_WARNING</code>) and <code>-t</code> adds the exact emitting Thread ID (TID).</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>2. Read the Smoking Gun in <code>traceprinter</code> Output</h2>
+            <p>
+              Here is the exact QNX 8.0 <code>traceprinter</code> signature captured while the buggy
+              <code>/dev/lidar_fusion</code> resource manager serves <code>adas_aeb</code> under a CAN telemetry burst:
+            </p>
+
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">/tmp/adas_aeb.trace.txt (QNX 8.0 traceprinter output)</span>
+                  <span class="code-lang">trace</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="trace">TRACEPRINTER version 1.02
+-- HEADER FILE INFORMATION --
+TRACE_FILE_NAME:: /tmp/adas_aeb.kev
+TRACE_SYSNAME:: QNX
+TRACE_SYS_RELEASE:: 8.0.0
+TRACE_ENCODING:: 16 byte events
+TRACE_CPU_NUM:: 2
+TRACE_CYCLES_PER_SEC:: 2000000000
+
+-- KERNEL EVENTS --
+t:0x00100000 CPU:00 PROCESS : PROCCREATE_NAME ppid:1 pid:4096 name:/proc/boot/lidar_mgr
+t:0x00100120 CPU:00 PROCESS : PROCCREATE_NAME ppid:1 pid:4102 name:/proc/boot/adas_aeb
+t:0x00100240 CPU:00 PROCESS : PROCCREATE_NAME ppid:1 pid:4118 name:/proc/boot/can_telemetry
+
+# 0.0 ms: High-priority safety client adas_aeb (prio 52) runs and queries /dev/lidar_fusion
+t:0x00400000 CPU:00 THREAD  : THRUNNING   pid:4102 tid:1 prio:52
+t:0x00461a80 CPU:00 COMM    : SND_MESSAGE rcvid:0x0000001f pid:4096
+t:0x00461b90 CPU:00 THREAD  : THREPLY     pid:4102 tid:1
+
+# 0.2 ms: lidar_mgr receives the request — STILL AT PRIO 18 (NO PRIORITY INHERITANCE!)
+t:0x00461c40 CPU:00 COMM    : REC_MESSAGE rcvid:0x0000001f pid:4096
+t:0x00461d10 CPU:00 THREAD  : THRUNNING   pid:4096 tid:1 prio:18
+
+# 0.5 ms: can_telemetry (prio 30) wakes up and PREEMPTS lidar_mgr (prio 18 &lt; 30)!
+t:0x004f4240 CPU:00 THREAD  : THREADY     pid:4096 tid:1
+t:0x004f4310 CPU:00 THREAD  : THRUNNING   pid:4118 tid:1 prio:30
+
+# ... 9.5 ms PRIORITY INVERSION! adas_aeb (prio 52) sits frozen in THREPLY! ...
+
+# 10.0 ms: can_telemetry finally yields; lidar_mgr finishes fusion &amp; replies at 10.6 ms
+t:0x01706680 CPU:00 THREAD  : THRUNNING   pid:4096 tid:1 prio:18
+t:0x0182b600 CPU:00 COMM    : REPLY_MESSAGE rcvid:0x0000001f pid:4102
+t:0x0182b720 CPU:00 THREAD  : THRUNNING   pid:4102 tid:1 prio:52</code></pre>
+            </div>
+
+            <h3>Kernel Event Cheat Sheet</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Event Class : Name</th>
+                  <th>Meaning in QNX 8.0</th>
+                  <th>Diagnostic Significance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>PROCESS : PROCCREATE_NAME</code></td>
+                  <td>Maps numeric <code>pid</code> to executable path</td>
+                  <td>Correlates PIDs <code>4096</code>, <code>4102</code>, <code>4118</code> to process names</td>
+                </tr>
+                <tr>
+                  <td><code>COMM : SND_MESSAGE</code></td>
+                  <td>Client sends synchronous IPC message</td>
+                  <td>Starts the IPC transaction clock on <code>rcvid</code></td>
+                </tr>
+                <tr>
+                  <td><code>THREAD : THREPLY</code></td>
+                  <td>Client blocked waiting for server <code>MsgReply()</code></td>
+                  <td>Long <code>THREPLY</code> duration on a prio-52 thread = upstream bottleneck</td>
+                </tr>
+                <tr>
+                  <td><code>COMM : REC_MESSAGE</code></td>
+                  <td>Server receives message from channel</td>
+                  <td>Check server's <code>prio</code> here: if still <code>18</code> instead of <code>52</code>, PI is off!</td>
+                </tr>
+                <tr>
+                  <td><code>THREAD : THRUNNING</code> / <code>THREADY</code></td>
+                  <td>CPU dispatch / preempted back to runqueue</td>
+                  <td>Medium-prio <code>THRUNNING</code> while server is <code>THREADY</code> confirms priority inversion</td>
+                </tr>
+                <tr>
+                  <td><code>COMM : REPLY_MESSAGE</code></td>
+                  <td>Server replies &amp; unblocks client</td>
+                  <td>Closes the IPC round-trip and restores server base priority</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>
+              And <code>slog2info -S -t -b lidar_fusion</code> immediately corroborates the kernel trace:
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">slog2info -S -t -b lidar_fusion Output (Buggy Build)</span>
+                  <span class="code-lang">trace</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="trace">Nov 22 04:51:12.104 lidar_fusion.4096 main  SLOG2_INFO    1 100 secpol transition succeeded: lidar_mgr_t -&gt; lidar_mgr_run_t
+Nov 22 04:51:12.105 lidar_fusion.4096 main  SLOG2_WARNING 1 103 Mounted /dev/lidar_fusion (base_prio=18, flags=_NTO_CHF_FIXED_PRIORITY — PI DISABLED!)
+Nov 22 04:51:14.011 lidar_fusion.4096 main  SLOG2_INFO    1 200 frame=1 reply_prio=18 obstacle=14.2m aeb=1 (FIXED_PRIORITY BUG ACTIVE)</code></pre>
+            </div>
+          </div>
+
+          <div class="step-footer">
+            <button class="nav-btn" type="button" data-nav-prev>← Step 4: secpol</button>
+            <span class="nav-kbd-hint">Step 5 / 7</span>
+            <button class="nav-btn primary" type="button" data-nav-next>Mark Complete &amp; Next: Simulator &amp; Fix →</button>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             STEP 6: Diagnose & Fix the Priority Inversion (Interactive Sim!)
+             =============================================================== -->
+        <section class="step-panel" data-step="6" aria-label="Step 6: Diagnose and Fix">
+          <div class="step-hero">
+            <div class="step-kicker">
+              <span>Step 6 of 7</span>
+              <span class="step-tag">⏱ 8 min</span>
+              <span class="step-tag">Interactive Microkernel Simulator</span>
+              <span class="step-tag">QNX-Pulse Studio</span>
+            </div>
+            <h1>Diagnose &amp; Fix the Priority Inversion</h1>
+            <p class="lead">
+              Toggle <code>_NTO_CHF_FIXED_PRIORITY</code> <strong>ON vs OFF</strong> in the live QNX 8.0 scheduler
+              simulator below. Watch how disabling priority inheritance lets medium-priority <code>can_telemetry</code>
+              (prio 30) hijack CPU 0 and push <code>adas_aeb</code> (prio 52) past its <strong>10.0 ms</strong> ISO 26262
+              deadline—and how a single-flag fix locks brake response to a rock-solid <strong>1.4 ms</strong> regardless
+              of CAN bus load!
+            </p>
+          </div>
+
+          <!-- =============================================================
+               INTERACTIVE PRIORITY INHERITANCE TIMELINE SIMULATOR
+               ============================================================= -->
+          <div id="pi-simulator" class="simulator-shell">
+            <div class="sim-header">
+              <div class="sim-title-group">
+                <h3>QNX 8.0 Microkernel Priority Inheritance Timeline Simulator (CPU:00 · SCHED_FIFO)</h3>
+                <p>Toggle channel flags, drag the CAN telemetry burst duration, and click any kernel event to inspect.</p>
+              </div>
+              <div class="mode-toggle-group" role="group" aria-label="Channel priority mode">
+                <button id="sim-mode-buggy" class="mode-btn active-buggy" type="button">
+                  BUGGY: _NTO_CHF_FIXED_PRIORITY ON
+                </button>
+                <button id="sim-mode-fixed" class="mode-btn" type="button">
+                  FIXED: Priority Inheritance Active
+                </button>
+              </div>
+            </div>
+
+            <!-- Live 4-Card Telemetry HUD -->
+            <div class="sim-metrics">
+              <div id="sim-card-latency" class="sim-metric-card state-fail">
+                <div class="sim-metric-label">adas_aeb Latency</div>
+                <div id="sim-m-latency" class="sim-metric-val">10.9 ms</div>
+                <div id="sim-m-latency-sub" class="sim-metric-sub">+0.9 ms past 10.0 ms deadline</div>
+              </div>
+              <div id="sim-card-prio" class="sim-metric-card state-fail">
+                <div class="sim-metric-label">lidar_fusion Effective Prio</div>
+                <div id="sim-m-prio" class="sim-metric-val">18 (Fixed)</div>
+                <div id="sim-m-prio-sub" class="sim-metric-sub">_NTO_CHF_FIXED_PRIORITY blocks PI</div>
+              </div>
+              <div id="sim-card-inversion" class="sim-metric-card state-fail">
+                <div class="sim-metric-label">Priority Inversion Window</div>
+                <div id="sim-m-inversion" class="sim-metric-val">9.5 ms</div>
+                <div id="sim-m-inversion-sub" class="sim-metric-sub">can_telemetry (30) preempts server</div>
+              </div>
+              <div id="sim-card-verdict" class="sim-metric-card state-fail">
+                <div class="sim-metric-label">ISO 26262 Verdict (10ms)</div>
+                <div id="sim-m-verdict" class="sim-metric-val">FAIL</div>
+                <div id="sim-m-verdict-sub" class="sim-metric-sub">ISO 26262 AEB deadline missed</div>
+              </div>
+            </div>
+
+            <!-- Interactive Playback & Workload Sliders -->
+            <div class="sim-controls">
+              <div class="sim-playback">
+                <button id="sim-play-btn" class="sim-ctrl-btn" type="button">▶ Play Trace</button>
+                <button id="sim-reset-btn" class="sim-ctrl-btn" type="button">↺ Reset</button>
+              </div>
+              <div class="sim-slider-group">
+                <label for="sim-burst-slider"><code>can_telemetry</code> Burst:</label>
+                <input id="sim-burst-slider" type="range" min="2.0" max="11.0" step="0.5" value="9.5">
+                <strong id="sim-burst-val">9.5 ms</strong>
+              </div>
+              <div class="sim-slider-group">
+                <label for="sim-scrub-slider">Playhead:</label>
+                <input id="sim-scrub-slider" type="range" min="0" max="14.0" step="0.1" value="14.0">
+                <strong id="sim-scrub-val">14.0 ms</strong>
+              </div>
+            </div>
+
+            <!-- Live Rendered SVG Gantt Chart -->
+            <div id="sim-svg-host" class="sim-svg-wrap"></div>
+
+            <!-- Color Legend -->
+            <div class="sim-legend">
+              <span class="legend-item"><span class="legend-swatch" style="background:#0ea5e9"></span>adas_aeb Running (Prio 52)</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:#10b981"></span>lidar_fusion Boosted (Prio 18 → 52 PI)</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:#6366f1"></span>lidar_fusion Fixed (Prio 18)</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:#f97316"></span>can_telemetry Preempting (Prio 30)</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:rgba(245,158,11,0.45);border:1px dashed #f59e0b"></span>THREPLY Blocked</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:#f43f5e"></span>10.0 ms Hard Deadline / Miss</span>
+            </div>
+
+            <!-- Synchronized Kernel Trace Feed -->
+            <div class="sim-trace-panel">
+              <div class="sim-trace-header">
+                <span>SYNCHRONIZED QNX 8.0 TRACEPRINTER EVENT STREAM (CLICK ANY LINE TO SEEK)</span>
+                <span>CPU:00 · SCHED_FIFO</span>
+              </div>
+              <ul id="sim-trace-log" class="sim-trace-log"></ul>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>The 1-Line Fix: Restore QNX 8.0 Priority Inheritance</h2>
+            <p>
+              Compare <a href="lab_files/buggy_lidar_mgr.c" target="_blank"><code>lab_files/buggy_lidar_mgr.c</code></a>
+              against <a href="lab_files/fixed_lidar_mgr.c" target="_blank"><code>lab_files/fixed_lidar_mgr.c</code></a>.
+              Removing <code>_NTO_CHF_FIXED_PRIORITY</code> from <code>ChannelCreate()</code> lets
+              <code>procnto-smp-instr</code> automatically propagate <code>adas_aeb</code>'s priority (<code>52</code>)
+              across the IPC channel on every <code>MsgSend()</code> and drop it cleanly back to <code>18</code> on <code>MsgReply()</code>:
+            </p>
+
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">Diff: buggy_lidar_mgr.c → fixed_lidar_mgr.c</span>
+                  <span class="code-lang">diff</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-no-highlight="true">/* ChannelCreate() inside main() */
+<span class="diff-del">- int chid = ChannelCreate(_NTO_CHF_FIXED_PRIORITY | _NTO_CHF_UNBLOCK | _NTO_CHF_DISCONNECT);</span>
+<span class="diff-add">+ int chid = ChannelCreate(_NTO_CHF_UNBLOCK | _NTO_CHF_DISCONNECT);</span></code></pre>
+            </div>
+
+            <div class="callout success">
+              <div class="callout-title">Verify the Fix on Target &amp; in QNX-Pulse Studio</div>
+              <p>
+                Rebuild and boot the fixed image with <code>make qemu-fixed</code>. Check <code>slog2info -S -t -b lidar_fusion</code>:
+                you will now see <code>reply_prio=52</code> (instead of <code>reply_prio=18</code>!), confirming kernel priority boost!
+              </p>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>Automate Root-Cause Analysis with QNX-Pulse Studio</h2>
+            <p>
+              In real automotive traces spanning hundreds of thousands of kernel events, hunting inversions by hand is
+              slow and error-prone. Feed your <code>traceprinter</code> capture, <code>lab.build</code>, and
+              <code>lab.secpol</code> directly into <strong>QNX-Pulse Workbench</strong> to automatically flag priority
+              inversions, compute per-thread WCET/p99 jitter, and audit security policies:
+            </p>
+
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-meta">
+                  <span class="code-filename">Host CLI — Analyze Trace, Buildfile &amp; Secpol with QNX-Pulse</span>
+                  <span class="code-lang">bash</span>
+                </div>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code data-lang="bash"># 1. Detect IPC priority inversions, blocking chains &amp; WCET jitter from your trace
+qnx-pulse analyze /tmp/adas_aeb.trace.txt --deadline-ms 10.0
+
+# 2. Audit your QNX 8.0 IFS buildfile and secpol policy for least-privilege compliance
+qnx-pulse audit --build lab_files/lab.build --secpol lab_files/lab.secpol
+
+# 3. Launch the interactive QNX-Pulse Web Studio (also serves this Codelab at /codelab/)
+qnx-pulse serve --port 8080</code></pre>
+            </div>
+          </div>
+
+          <div class="step-footer">
+            <button class="nav-btn" type="button" data-nav-prev>← Step 5: Kernel Trace</button>
+            <span class="nav-kbd-hint">Step 6 / 7</span>
+            <button class="nav-btn primary" type="button" data-nav-next>Mark Complete &amp; Next: Quiz &amp; Wrap-Up →</button>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             STEP 7: Verification, Knowledge Check Quiz & Next Steps
+             =============================================================== -->
+        <section class="step-panel" data-step="7" aria-label="Step 7: Quiz and Verification">
+          <div class="step-hero">
+            <div class="step-kicker">
+              <span>Step 7 of 7</span>
+              <span class="step-tag">⏱ 5 min</span>
+              <span class="step-tag">Knowledge Check</span>
+              <span class="step-tag">Verification</span>
+            </div>
+            <h1>Verification, Knowledge Check Quiz &amp; Next Steps</h1>
+            <p class="lead">
+              Lock in what you built! Test your QNX SDP 8.0 real-time systems instincts with 4 scenario-based questions,
+              check off your lab verification list, and explore next steps for Raspberry Pi 5 and production SDVs.
+            </p>
+          </div>
+
+          <div class="content-card">
+            <div class="quiz-header-bar">
+              <h2 style="margin:0">QNX 8.0 Comprehension Quiz</h2>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span id="quiz-score-pill" class="quiz-score-pill">Score: 0 / 4</span>
+                <button id="quiz-reset-btn" class="topbar-btn" type="button">Reset Quiz</button>
+              </div>
+            </div>
+
+            <div id="quiz-banner" class="quiz-banner">
+              <strong>4 / 4 Mastered — Zero-Jitter QNX 8.0 Certified!</strong> You nailed instrumented boot images,
+              synchronous IPC priority inheritance, two-phase <code>secpol</code> privilege dropping, and
+              <code>traceprinter</code> root-cause diagnosis.
+            </div>
+
+            <!-- Question 1 -->
+            <div class="quiz-card" data-qid="q1" data-correct="b"
+                 data-explain-correct="QNX 8.0 superlocks kernel memory by default (making legacy QNX 7 superlock flags obsolete), and tracelogger requires the instrumented kernel variant procnto-smp-instr plus the PROCMGR_AID_TRACE ability."
+                 data-explain-wrong="Remember two QNX 8.0 essentials: superlocking is enabled by default in QNX 8.0, and kernel tracepoints require procnto-smp-instr (plus PROCMGR_AID_TRACE for tracelogger).">
+              <p class="quiz-q">1. When crafting a QNX SDP 8.0 <code>.build</code> file to capture <code>tracelogger</code> traces, which statement is accurate?</p>
+              <div class="quiz-options">
+                <button class="quiz-opt-btn" type="button" data-opt="a">
+                  <span class="quiz-opt-key">A</span>
+                  <span>You must boot standard <code>procnto-smp</code> and pass legacy QNX 7 superlocking flags.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="b">
+                  <span class="quiz-opt-key">B</span>
+                  <span>Boot <code>procnto-smp-instr</code>; QNX 8.0 superlocks the kernel by default, and <code>tracelogger</code> needs <code>PROCMGR_AID_TRACE</code>.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="c">
+                  <span class="quiz-opt-key">C</span>
+                  <span><code>tracelogger</code> runs only on the host over SSH and never needs kernel instrumentation.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="d">
+                  <span class="quiz-opt-key">D</span>
+                  <span><code>secpolpush</code> must run at the very end of <code>startup-script</code> after <code>ksh</code> exits.</span>
+                </button>
+              </div>
+              <div class="quiz-feedback"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="quiz-card" data-qid="q2" data-correct="c"
+                 data-explain-correct="Without _NTO_CHF_FIXED_PRIORITY, QNX 8.0 synchronous IPC automatically boosts the receiving server thread to the sending client's priority (18 → 52) until MsgReply() completes."
+                 data-explain-wrong="_NTO_CHF_FIXED_PRIORITY explicitly turns OFF priority inheritance! Omitting it restores QNX's built-in synchronous IPC priority boost (18 → 52 until MsgReply()).">
+              <p class="quiz-q">2. Why did removing <code>_NTO_CHF_FIXED_PRIORITY</code> from <code>ChannelCreate()</code> cut <code>adas_aeb</code> latency from 10.9 ms to 1.4 ms?</p>
+              <div class="quiz-options">
+                <button class="quiz-opt-btn" type="button" data-opt="a">
+                  <span class="quiz-opt-key">A</span>
+                  <span>It permanently raised <code>lidar_mgr</code>'s base priority to 63 so nothing could ever preempt it.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="b">
+                  <span class="quiz-opt-key">B</span>
+                  <span>It switched <code>/dev/lidar_fusion</code> from synchronous IPC to asynchronous UDP sockets.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="c">
+                  <span class="quiz-opt-key">C</span>
+                  <span>It re-enabled QNX synchronous IPC Priority Inheritance, boosting <code>lidar_mgr</code> from prio 18 → 52 while servicing <code>adas_aeb</code> until <code>MsgReply()</code>.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="d">
+                  <span class="quiz-opt-key">D</span>
+                  <span>It disabled <code>can_telemetry</code> inside <code>secpol</code>.</span>
+                </button>
+              </div>
+              <div class="quiz-feedback"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="quiz-card" data-qid="q3" data-correct="a"
+                 data-explain-correct="derive_type lidar_mgr_t run lidar_mgr_run_t maps secpol_transition_type(NULL, 'run', 0) to lidar_mgr_run_t, and PROCMGR_AOP_LOCK makes denied abilities permanently immutable."
+                 data-explain-wrong="Look back at Step 4: secpol_transition_type(NULL, 'run', 0) uses derive_type to transition into lidar_mgr_run_t, and procmgr_ability(..., PROCMGR_AOP_LOCK) irreversibly locks denied abilities.">
+              <p class="quiz-q">3. How does <code>lidar_mgr</code> shed its startup privileges after calling <code>resmgr_attach()</code>?</p>
+              <div class="quiz-options">
+                <button class="quiz-opt-btn" type="button" data-opt="a">
+                  <span class="quiz-opt-key">A</span>
+                  <span>Calls <code>secpol_transition_type(NULL, "run", 0)</code> (backed by <code>derive_type</code> in <code>lab.secpol</code>) and locks denied abilities with <code>procmgr_ability(... PROCMGR_AOP_LOCK ...)</code>.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="b">
+                  <span class="quiz-opt-key">B</span>
+                  <span>Calls <code>unlink("/dev/lidar_fusion")</code> and runs as UID 0 forever.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="c">
+                  <span class="quiz-opt-key">C</span>
+                  <span>Executes <code>secpolcompile</code> inside <code>io_read()</code> on every frame.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="d">
+                  <span class="quiz-opt-key">D</span>
+                  <span>Sets <code>_NTO_CHF_FIXED_PRIORITY</code> to prevent privilege escalation.</span>
+                </button>
+              </div>
+              <div class="quiz-feedback"></div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="quiz-card" data-qid="q4" data-correct="d"
+                 data-explain-correct="That exact sequence — high-prio client blocked in THREPLY, server running at unboosted base prio 18 then forced into THREADY while medium-prio thread enters THRUNNING — is the textbook QNX traceprinter signature of IPC priority inversion."
+                 data-explain-wrong="Watch the three threads together: adas_aeb (52) enters THREPLY after COMM:SND_MESSAGE, lidar_mgr stays at prio 18 and gets pushed to THREADY, and can_telemetry (30) grabs CPU:00 in THRUNNING.">
+              <p class="quiz-q">4. Which <code>traceprinter</code> event sequence confirms an IPC Priority Inversion on CPU 0?</p>
+              <div class="quiz-options">
+                <button class="quiz-opt-btn" type="button" data-opt="a">
+                  <span class="quiz-opt-key">A</span>
+                  <span><code>PROCCREATE_NAME</code> followed immediately by <code>COMM:REPLY_MESSAGE</code>.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="b">
+                  <span class="quiz-opt-key">B</span>
+                  <span><code>lidar_mgr</code> entering <code>THRUNNING</code> at <code>prio:52</code> while <code>can_telemetry</code> stays <code>THREADY</code>.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="c">
+                  <span class="quiz-opt-key">C</span>
+                  <span><code>slog2info</code> printing <code>SLOG2_INFO</code> with <code>reply_prio=52</code>.</span>
+                </button>
+                <button class="quiz-opt-btn" type="button" data-opt="d">
+                  <span class="quiz-opt-key">D</span>
+                  <span><code>adas_aeb</code> (prio 52) enters <code>THREPLY</code> after <code>SND_MESSAGE</code>, <code>lidar_mgr</code> stays at <code>prio:18</code> and becomes <code>THREADY</code>, while <code>can_telemetry</code> (prio 30) enters <code>THRUNNING</code>.</span>
+                </button>
+              </div>
+              <div class="quiz-feedback"></div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2>Final Lab Verification Checklist</h2>
+            <p>Check off each engineering milestone as you validate it on QEMU or Raspberry Pi 5:</p>
+            <ul class="checklist">
+              <li>
+                <label>
+                  <input type="checkbox" data-check-id="c1">
+                  <span>Compiled <code>lab_files/lab.secpol</code> with <code>secpolcompile -o secpol.bin lab.secpol</code> with zero errors.</span>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <input type="checkbox" data-check-id="c2">
+                  <span>Built and booted <code>ifs-lab-buggy.bin</code> using <code>procnto-smp-instr -v</code> and confirmed <code>/dev/lidar_fusion</code> mounted as <code>lidar_mgr_run_t</code>.</span>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <input type="checkbox" data-check-id="c3">
+                  <span>Captured <code>/tmp/adas_aeb.kev</code> via <code>tracelogger -f /tmp/adas_aeb.kev -n 4 -s 5</code> and decoded with <code>traceprinter</code>.</span>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <input type="checkbox" data-check-id="c4">
+                  <span>Toggled the Step 6 simulator and verified <code>fixed_lidar_mgr.c</code> removes <code>_NTO_CHF_FIXED_PRIORITY</code>, restoring <code>reply_prio=52</code> and <code>1.4 ms</code> deterministic AEB latency.</span>
+                </label>
+              </li>
+            </ul>
+          </div>
+
+          <div class="content-card">
+            <h2>Companion Files &amp; Next Steps</h2>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Role in Tutorial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="lab_files/lab.build" target="_blank"><code>lab_files/lab.build</code></a></td>
+                  <td>QNX 8.0 multiboot x86_64 IFS buildfile with <code>procnto-smp-instr</code> &amp; <code>secpolpush</code></td>
+                </tr>
+                <tr>
+                  <td><a href="lab_files/lab.secpol" target="_blank"><code>lab_files/lab.secpol</code></a></td>
+                  <td>Least-privilege MAC policy with <code>allow_attach</code> &amp; <code>derive_type</code> runtime transition</td>
+                </tr>
+                <tr>
+                  <td><a href="lab_files/buggy_lidar_mgr.c" target="_blank"><code>lab_files/buggy_lidar_mgr.c</code></a></td>
+                  <td>Resource manager exhibiting the <code>_NTO_CHF_FIXED_PRIORITY</code> priority inversion bug</td>
+                </tr>
+                <tr>
+                  <td><a href="lab_files/fixed_lidar_mgr.c" target="_blank"><code>lab_files/fixed_lidar_mgr.c</code></a></td>
+                  <td>Zero-jitter fixed resource manager with QNX 8.0 Priority Inheritance enabled</td>
+                </tr>
+                <tr>
+                  <td><a href="lab_files/Makefile" target="_blank"><code>lab_files/Makefile</code></a></td>
+                  <td>One-command build &amp; QEMU launch targets for <code>x86_64</code> and <code>aarch64le</code> (Raspberry Pi 5)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <ul>
+              <li><strong>Explore QNX-Pulse Studio:</strong> <a href="../">Launch the QNX-Pulse Web Workbench</a> to inspect live traces, IPC dependency graphs, and automated buildfile/secpol audits.</li>
+              <li><strong>Official QNX SDP 8.0 Docs:</strong> <a href="https://www.qnx.com/developers/docs/8.0/" target="_blank" rel="noopener">QNX OS 8.0 Documentation Portal</a> (Writing a Resource Manager, System Security Guide, System Analysis Toolkit).</li>
+              <li><strong>Get Free Non-Commercial QNX 8.0:</strong> <a href="https://www.qnx.com/products/everywhere/" target="_blank" rel="noopener">QNX Everywhere</a> (SDP 8.0 + Raspberry Pi 5 &amp; QEMU Quick-Start images).</li>
+              <li><strong>GitHub Markdown Edition:</strong> Read or fork <a href="CODELAB.md" target="_blank"><code>CODELAB.md</code></a> directly in your repository.</li>
+            </ul>
+          </div>
+
+          <div class="step-footer">
+            <button class="nav-btn" type="button" data-nav-prev>← Step 6: Simulator &amp; Fix</button>
+            <span class="nav-kbd-hint">Step 7 / 7 — Complete!</span>
+            <button class="nav-btn primary" type="button" data-nav-next>✓ Mark Codelab Complete</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="codelab.js"></script>
+</body>
+</html>

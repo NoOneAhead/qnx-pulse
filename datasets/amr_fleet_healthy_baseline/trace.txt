@@ -1,0 +1,134 @@
+TRACEPRINTER version 1.05
+TRACEPARSER LIBRARY version 1.05
+-- HEADER FILE INFORMATION --
+TRACE_FILE_NAME:: amr_fleet_healthy_baseline.kev
+TRACE_DATE:: Thu Nov 19 17:10:00 2026
+TRACE_VER_MAJOR:: 1
+TRACE_VER_MINOR:: 02
+TRACE_LITTLE_ENDIAN:: TRUE
+TRACE_ENCODING:: 16 byte events
+TRACE_BOOT_DATE:: Thu Nov 19 17:08:00 2026
+TRACE_CYCLES_PER_SEC:: 2500000000
+TRACE_CPU_NUM:: 4
+TRACE_SYSNAME:: QNX
+TRACE_NODENAME:: qnx8-amr-07
+TRACE_SYS_RELEASE:: 8.0.0
+TRACE_MACHINE:: x86_64
+TRACE_TRACELOGGER_ARGS:: tracelogger -f /tmp/amr_healthy.kev -n 4 -s 5
+
+-- KERNEL EVENTS --
+t:0x01000000 CPU:00 PROCESS : PROCCREATE_NAME ppid:1 pid:60200 name:/proc/boot/motion_planner
+t:0x01001d4c CPU:00 THREAD  : THCREATE pid:60200 tid:1 priority:52 policy:FIFO
+t:0x01002710 CPU:00 THREAD  : THNAMECREATE pid:60200 tid:1 name:mpc_loop
+t:0x01003a98 CPU:01 PROCESS : PROCCREATE_NAME ppid:1 pid:60201 name:/proc/boot/lidar_fusion
+t:0x01004e20 CPU:01 THREAD  : THCREATE pid:60201 tid:1 priority:18 policy:FIFO
+t:0x010057e4 CPU:01 THREAD  : THNAMECREATE pid:60201 tid:1 name:resmgr_worker
+t:0x010061a8 CPU:01 KER_CALL: CHANNEL_CREATE/25 pid:60201 tid:1 flags:0x0000
+t:0x01006b6c CPU:01 USREVENT: 801 pid:60201 tid:1 resmgr_path:/dev/lidar_fusion
+t:0x01007ef4 CPU:02 PROCESS : PROCCREATE_NAME ppid:1 pid:60202 name:/proc/boot/motor_drive_mgr
+t:0x010088b8 CPU:02 THREAD  : THCREATE pid:60202 tid:1 priority:50 policy:FIFO
+t:0x0100927c CPU:02 THREAD  : THNAMECREATE pid:60202 tid:1 name:drive_tx
+t:0x01009c40 CPU:02 USREVENT: 801 pid:60202 tid:1 resmgr_path:/dev/motor_can
+t:0x0100afc8 CPU:01 PROCESS : PROCCREATE_NAME ppid:1 pid:60203 name:/proc/boot/fleet_telemetry
+t:0x0100b98c CPU:01 THREAD  : THCREATE pid:60203 tid:1 priority:28 policy:RR
+t:0x0100c350 CPU:01 THREAD  : THNAMECREATE pid:60203 tid:1 name:mqtt_tx
+t:0x0100d6d8 CPU:03 PROCESS : PROCCREATE_NAME ppid:1 pid:60204 name:/proc/boot/qnx_pulse_agent
+t:0x0100e09c CPU:03 THREAD  : THCREATE pid:60204 tid:1 priority:14 policy:RR
+t:0x0100ea60 CPU:03 THREAD  : THNAMECREATE pid:60204 tid:1 name:pulse_mon
+t:0x0100f424 CPU:03 USREVENT: 801 pid:60204 tid:1 resmgr_path:/dev/qnxpulse
+
+# --- Cycle 1 (Priority Inheritance boosts lidar_fusion 18 -> 52!) ---
+t:0x0107a120 CPU:00 USREVENT: 810 pid:60200 tid:1 tag:DEADLINE_START frame:1 deadline_us:5000
+t:0x0107a120 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x010bd358 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000101 src_pid:60200 src_tid:1 dst_pid:60201 dst_tid:1
+t:0x010c2178 CPU:01 COMM    : REC_MESSAGE rcvid:0x00000101 pid:60201 tid:1 priority:52
+t:0x010c3500 CPU:01 THREAD  : THRUNNING pid:60201 tid:1 priority:52 policy:FIFO
+t:0x010e7ef0 CPU:01 THREAD  : THREADY pid:60203 tid:1 priority:28
+t:0x0114e790 CPU:01 COMM    : REPLY_MESSAGE rcvid:0x00000101 pid:60201 tid:1
+t:0x01151864 CPU:01 THREAD  : THRECEIVE pid:60201 tid:1 priority:18
+t:0x01154938 CPU:01 THREAD  : THRUNNING pid:60203 tid:1 priority:28 policy:RR
+t:0x01157a0c CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x01185678 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000102 src_pid:60200 src_tid:1 dst_pid:60202 dst_tid:1
+t:0x0118a498 CPU:02 COMM    : REC_MESSAGE rcvid:0x00000102 pid:60202 tid:1 priority:52
+t:0x0118b820 CPU:02 THREAD  : THRUNNING pid:60202 tid:1 priority:52 policy:FIFO
+t:0x011c2708 CPU:02 COMM    : REPLY_MESSAGE rcvid:0x00000102 pid:60202 tid:1
+t:0x011c4e18 CPU:02 THREAD  : THRECEIVE pid:60202 tid:1 priority:50
+t:0x011c88b0 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x011e4024 CPU:00 USREVENT: 811 pid:60200 tid:1 tag:DEADLINE_END frame:1
+t:0x011e70f8 CPU:00 THREAD  : THNANOSLEEP pid:60200 tid:1 priority:52
+t:0x013d0900 CPU:01 THREAD  : THNANOSLEEP pid:60203 tid:1 priority:28
+t:0x0153ec60 CPU:03 THREAD  : THRUNNING pid:60204 tid:1 priority:14 policy:RR
+t:0x015aca30 CPU:03 COMM    : SND_PULSE_EXE src_pid:60204 dst_pid:60200 code:10
+t:0x015d75c8 CPU:03 THREAD  : THRECEIVE pid:60204 tid:1 priority:14
+
+# --- Cycle 2 (Priority Inheritance boosts lidar_fusion 18 -> 52!) ---
+t:0x01c65d40 CPU:00 USREVENT: 810 pid:60200 tid:1 tag:DEADLINE_START frame:2 deadline_us:5000
+t:0x01c65d40 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x01ca8f78 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000201 src_pid:60200 src_tid:1 dst_pid:60201 dst_tid:1
+t:0x01cadd98 CPU:01 COMM    : REC_MESSAGE rcvid:0x00000201 pid:60201 tid:1 priority:52
+t:0x01caf120 CPU:01 THREAD  : THRUNNING pid:60201 tid:1 priority:52 policy:FIFO
+t:0x01cd3b10 CPU:01 THREAD  : THREADY pid:60203 tid:1 priority:28
+t:0x01d4b520 CPU:01 COMM    : REPLY_MESSAGE rcvid:0x00000201 pid:60201 tid:1
+t:0x01d4e5f4 CPU:01 THREAD  : THRECEIVE pid:60201 tid:1 priority:18
+t:0x01d516c8 CPU:01 THREAD  : THRUNNING pid:60203 tid:1 priority:28 policy:RR
+t:0x01d5479c CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x01d82408 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000202 src_pid:60200 src_tid:1 dst_pid:60202 dst_tid:1
+t:0x01d87228 CPU:02 COMM    : REC_MESSAGE rcvid:0x00000202 pid:60202 tid:1 priority:52
+t:0x01d885b0 CPU:02 THREAD  : THRUNNING pid:60202 tid:1 priority:52 policy:FIFO
+t:0x01dbf498 CPU:02 COMM    : REPLY_MESSAGE rcvid:0x00000202 pid:60202 tid:1
+t:0x01dc1ba8 CPU:02 THREAD  : THRECEIVE pid:60202 tid:1 priority:50
+t:0x01dc5640 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x01de0db4 CPU:00 USREVENT: 811 pid:60200 tid:1 tag:DEADLINE_END frame:2
+t:0x01de3e88 CPU:00 THREAD  : THNANOSLEEP pid:60200 tid:1 priority:52
+t:0x01fbc520 CPU:01 THREAD  : THNANOSLEEP pid:60203 tid:1 priority:28
+t:0x0212a880 CPU:03 THREAD  : THRUNNING pid:60204 tid:1 priority:14 policy:RR
+t:0x02198650 CPU:03 COMM    : SND_PULSE_EXE src_pid:60204 dst_pid:60200 code:10
+t:0x021c31e8 CPU:03 THREAD  : THRECEIVE pid:60204 tid:1 priority:14
+
+# --- Cycle 3 (Priority Inheritance boosts lidar_fusion 18 -> 52!) ---
+t:0x02851960 CPU:00 USREVENT: 810 pid:60200 tid:1 tag:DEADLINE_START frame:3 deadline_us:5000
+t:0x02851960 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x02894b98 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000301 src_pid:60200 src_tid:1 dst_pid:60201 dst_tid:1
+t:0x028999b8 CPU:01 COMM    : REC_MESSAGE rcvid:0x00000301 pid:60201 tid:1 priority:52
+t:0x0289ad40 CPU:01 THREAD  : THRUNNING pid:60201 tid:1 priority:52 policy:FIFO
+t:0x028bf730 CPU:01 THREAD  : THREADY pid:60203 tid:1 priority:28
+t:0x02914e60 CPU:01 COMM    : REPLY_MESSAGE rcvid:0x00000301 pid:60201 tid:1
+t:0x02917f34 CPU:01 THREAD  : THRECEIVE pid:60201 tid:1 priority:18
+t:0x0291b008 CPU:01 THREAD  : THRUNNING pid:60203 tid:1 priority:28 policy:RR
+t:0x0291e0dc CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x0294bd48 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000302 src_pid:60200 src_tid:1 dst_pid:60202 dst_tid:1
+t:0x02950b68 CPU:02 COMM    : REC_MESSAGE rcvid:0x00000302 pid:60202 tid:1 priority:52
+t:0x02951ef0 CPU:02 THREAD  : THRUNNING pid:60202 tid:1 priority:52 policy:FIFO
+t:0x02988dd8 CPU:02 COMM    : REPLY_MESSAGE rcvid:0x00000302 pid:60202 tid:1
+t:0x0298b4e8 CPU:02 THREAD  : THRECEIVE pid:60202 tid:1 priority:50
+t:0x0298ef80 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x029aa6f4 CPU:00 USREVENT: 811 pid:60200 tid:1 tag:DEADLINE_END frame:3
+t:0x029ad7c8 CPU:00 THREAD  : THNANOSLEEP pid:60200 tid:1 priority:52
+t:0x02ba8140 CPU:01 THREAD  : THNANOSLEEP pid:60203 tid:1 priority:28
+t:0x02d164a0 CPU:03 THREAD  : THRUNNING pid:60204 tid:1 priority:14 policy:RR
+t:0x02d84270 CPU:03 COMM    : SND_PULSE_EXE src_pid:60204 dst_pid:60200 code:10
+t:0x02daee08 CPU:03 THREAD  : THRECEIVE pid:60204 tid:1 priority:14
+
+# --- Cycle 4 (Priority Inheritance boosts lidar_fusion 18 -> 52!) ---
+t:0x0343d580 CPU:00 USREVENT: 810 pid:60200 tid:1 tag:DEADLINE_START frame:4 deadline_us:5000
+t:0x0343d580 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x034807b8 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000401 src_pid:60200 src_tid:1 dst_pid:60201 dst_tid:1
+t:0x034855d8 CPU:01 COMM    : REC_MESSAGE rcvid:0x00000401 pid:60201 tid:1 priority:52
+t:0x03486960 CPU:01 THREAD  : THRUNNING pid:60201 tid:1 priority:52 policy:FIFO
+t:0x034ab350 CPU:01 THREAD  : THREADY pid:60203 tid:1 priority:28
+t:0x03511bf0 CPU:01 COMM    : REPLY_MESSAGE rcvid:0x00000401 pid:60201 tid:1
+t:0x03514cc4 CPU:01 THREAD  : THRECEIVE pid:60201 tid:1 priority:18
+t:0x03517d98 CPU:01 THREAD  : THRUNNING pid:60203 tid:1 priority:28 policy:RR
+t:0x0351ae6c CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x03548ad8 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000402 src_pid:60200 src_tid:1 dst_pid:60202 dst_tid:1
+t:0x0354d8f8 CPU:02 COMM    : REC_MESSAGE rcvid:0x00000402 pid:60202 tid:1 priority:52
+t:0x0354ec80 CPU:02 THREAD  : THRUNNING pid:60202 tid:1 priority:52 policy:FIFO
+t:0x03585b68 CPU:02 COMM    : REPLY_MESSAGE rcvid:0x00000402 pid:60202 tid:1
+t:0x03588278 CPU:02 THREAD  : THRECEIVE pid:60202 tid:1 priority:50
+t:0x0358bd10 CPU:00 THREAD  : THRUNNING pid:60200 tid:1 priority:52 policy:FIFO
+t:0x035a7484 CPU:00 USREVENT: 811 pid:60200 tid:1 tag:DEADLINE_END frame:4
+t:0x035aa558 CPU:00 THREAD  : THNANOSLEEP pid:60200 tid:1 priority:52
+t:0x03793d60 CPU:01 THREAD  : THNANOSLEEP pid:60203 tid:1 priority:28
+t:0x039020c0 CPU:03 THREAD  : THRUNNING pid:60204 tid:1 priority:14 policy:RR
+t:0x0396fe90 CPU:03 COMM    : SND_PULSE_EXE src_pid:60204 dst_pid:60200 code:10
+t:0x0399aa28 CPU:03 THREAD  : THRECEIVE pid:60204 tid:1 priority:14

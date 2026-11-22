@@ -1,0 +1,105 @@
+TRACEPRINTER version 1.05
+TRACEPARSER LIBRARY version 1.05
+-- HEADER FILE INFORMATION --
+TRACE_FILE_NAME:: adas_aeb_inversion.kev
+TRACE_DATE:: Thu Nov 19 14:22:10 2026
+TRACE_VER_MAJOR:: 1
+TRACE_VER_MINOR:: 02
+TRACE_LITTLE_ENDIAN:: TRUE
+TRACE_ENCODING:: 16 byte events
+TRACE_BOOT_DATE:: Thu Nov 19 14:20:00 2026
+TRACE_CYCLES_PER_SEC:: 2500000000
+TRACE_CPU_NUM:: 4
+TRACE_SYSNAME:: QNX
+TRACE_NODENAME:: qnx8-adas-ecu
+TRACE_SYS_RELEASE:: 8.0.0
+TRACE_MACHINE:: x86_64
+TRACE_TRACELOGGER_ARGS:: tracelogger -f /tmp/adas_aeb_inversion.kev -n 4 -s 5
+
+-- KERNEL EVENTS --
+t:0x01000000 CPU:00 CONTROL : BUFFER sequence:1 num_events:140
+t:0x010030d4 CPU:00 PROCESS : PROCCREATE_NAME ppid:1 pid:41370 name:/proc/boot/adas_aeb
+t:0x01004e20 CPU:00 THREAD  : THCREATE pid:41370 tid:1 priority:52 policy:FIFO
+t:0x010057e4 CPU:00 THREAD  : THNAMECREATE pid:41370 tid:1 name:aeb_ctrl
+t:0x01007530 CPU:01 PROCESS : PROCCREATE_NAME ppid:1 pid:41371 name:/proc/boot/lidar_fusion
+t:0x0100927c CPU:01 THREAD  : THCREATE pid:41371 tid:1 priority:18 policy:FIFO
+t:0x01009c40 CPU:01 THREAD  : THNAMECREATE pid:41371 tid:1 name:resmgr_worker
+t:0x0100afc8 CPU:01 KER_CALL: CHANNEL_CREATE/25 pid:41371 tid:1 flags:0x0001 flags_name:_NTO_CHF_FIXED_PRIORITY
+t:0x0100c350 CPU:01 USREVENT: 801 pid:41371 tid:1 resmgr_path:/dev/lidar_fusion chflags:_NTO_CHF_FIXED_PRIORITY
+t:0x0100d6d8 CPU:02 PROCESS : PROCCREATE_NAME ppid:1 pid:41372 name:/proc/boot/brake_actuator
+t:0x0100ea60 CPU:02 THREAD  : THCREATE pid:41372 tid:1 priority:48 policy:FIFO
+t:0x0100f424 CPU:02 THREAD  : THNAMECREATE pid:41372 tid:1 name:can_tx
+t:0x0100fde8 CPU:02 USREVENT: 801 pid:41372 tid:1 resmgr_path:/dev/brake_can
+t:0x01011170 CPU:01 PROCESS : PROCCREATE_NAME ppid:1 pid:41373 name:/proc/boot/can_telemetry
+t:0x010124f8 CPU:01 THREAD  : THCREATE pid:41373 tid:1 priority:30 policy:RR
+t:0x01012ebc CPU:01 THREAD  : THNAMECREATE pid:41373 tid:1 name:tele_compress
+t:0x01014244 CPU:03 PROCESS : PROCCREATE_NAME ppid:1 pid:41374 name:/proc/boot/qnx_pulse_agent
+t:0x010155cc CPU:03 THREAD  : THCREATE pid:41374 tid:1 priority:12 policy:RR
+t:0x01015f90 CPU:03 THREAD  : THNAMECREATE pid:41374 tid:1 name:pulse_mon
+t:0x01016954 CPU:03 USREVENT: 801 pid:41374 tid:1 resmgr_path:/dev/qnxpulse
+
+# --- Frame 1 (Healthy baseline: 1.65 ms < 10.0 ms deadline) ---
+t:0x0107a120 CPU:00 USREVENT: 810 pid:41370 tid:1 tag:DEADLINE_START frame:1 deadline_us:10000
+t:0x0107a120 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x01112a88 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000101 src_pid:41370 src_tid:1 dst_pid:41371 dst_tid:1
+t:0x0111bd04 CPU:01 COMM    : REC_MESSAGE rcvid:0x00000101 pid:41371 tid:1 priority:18
+t:0x0111edd8 CPU:01 THREAD  : THRUNNING pid:41371 tid:1 priority:18 policy:FIFO
+t:0x012faf08 CPU:01 COMM    : REPLY_MESSAGE rcvid:0x00000101 pid:41371 tid:1
+t:0x012fdfdc CPU:01 THREAD  : THRECEIVE pid:41371 tid:1 priority:18
+t:0x01307258 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x01375028 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000102 src_pid:41370 src_tid:1 dst_pid:41372 dst_tid:1
+t:0x0137b1d0 CPU:02 COMM    : REC_MESSAGE rcvid:0x00000102 pid:41372 tid:1 priority:52
+t:0x0137e2a4 CPU:02 THREAD  : THRUNNING pid:41372 tid:1 priority:52 policy:FIFO
+t:0x01419ce0 CPU:02 COMM    : REPLY_MESSAGE rcvid:0x00000102 pid:41372 tid:1
+t:0x0141cdb4 CPU:02 THREAD  : THRECEIVE pid:41372 tid:1 priority:48
+t:0x01426030 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x01469268 CPU:00 USREVENT: 811 pid:41370 tid:1 tag:DEADLINE_END frame:1
+t:0x0146c33c CPU:00 THREAD  : THNANOSLEEP pid:41370 tid:1 priority:52
+t:0x017270e0 CPU:03 THREAD  : THRUNNING pid:41374 tid:1 priority:12 policy:RR
+t:0x017829b8 CPU:03 COMM    : SND_PULSE_EXE src_pid:41374 dst_pid:41370 code:10
+t:0x017de290 CPU:03 THREAD  : THRECEIVE pid:41374 tid:1 priority:12
+
+# --- Frame 2 (CRITICAL PRIORITY INVERSION: 12.45 ms > 10.0 ms DEADLINE MISS!) ---
+t:0x027d7840 CPU:00 USREVENT: 810 pid:41370 tid:1 tag:DEADLINE_START frame:2 deadline_us:10000
+t:0x027d7840 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x0285dcb0 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000201 src_pid:41370 src_tid:1 dst_pid:41371 dst_tid:1
+t:0x02866f2c CPU:01 COMM    : REC_MESSAGE rcvid:0x00000201 pid:41371 tid:1 priority:18
+t:0x0286a000 CPU:01 THREAD  : THRUNNING pid:41371 tid:1 priority:18 policy:FIFO
+t:0x028d7dd0 CPU:01 THREAD  : THREADY pid:41371 tid:1 priority:18
+t:0x028daea4 CPU:01 THREAD  : THRUNNING pid:41373 tid:1 priority:30 policy:RR
+t:0x03292190 CPU:03 THREAD  : THRUNNING pid:41374 tid:1 priority:12 policy:RR
+t:0x0330c2b0 CPU:03 COMM    : SND_PULSE_EXE src_pid:41374 dst_pid:41371 code:11
+t:0x03367b88 CPU:03 THREAD  : THRECEIVE pid:41374 tid:1 priority:12
+t:0x041a6924 CPU:01 THREAD  : THNANOSLEEP pid:41373 tid:1 priority:30
+t:0x041acacc CPU:01 THREAD  : THRUNNING pid:41371 tid:1 priority:18 policy:FIFO
+t:0x0439e1c8 CPU:01 COMM    : REPLY_MESSAGE rcvid:0x00000201 pid:41371 tid:1
+t:0x043a129c CPU:01 THREAD  : THRECEIVE pid:41371 tid:1 priority:18
+t:0x043ad5ec CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x04442e80 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000202 src_pid:41370 src_tid:1 dst_pid:41372 dst_tid:1
+t:0x04449028 CPU:02 COMM    : REC_MESSAGE rcvid:0x00000202 pid:41372 tid:1 priority:52
+t:0x0444c0fc CPU:02 THREAD  : THRUNNING pid:41372 tid:1 priority:52 policy:FIFO
+t:0x0451ea20 CPU:02 COMM    : REPLY_MESSAGE rcvid:0x00000202 pid:41372 tid:1
+t:0x04521af4 CPU:02 THREAD  : THRECEIVE pid:41372 tid:1 priority:48
+t:0x0452ad70 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x04586648 CPU:00 USREVENT: 811 pid:41370 tid:1 tag:DEADLINE_END frame:2
+t:0x0458971c CPU:00 THREAD  : THNANOSLEEP pid:41370 tid:1 priority:52
+
+# --- Frame 3 (Recovery after telemetry burst: 1.78 ms < 10.0 ms deadline) ---
+t:0x04938700 CPU:00 USREVENT: 810 pid:41370 tid:1 tag:DEADLINE_START frame:3 deadline_us:10000
+t:0x04938700 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x049b89c8 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000301 src_pid:41370 src_tid:1 dst_pid:41371 dst_tid:1
+t:0x049c1c44 CPU:01 COMM    : REC_MESSAGE rcvid:0x00000301 pid:41371 tid:1 priority:18
+t:0x049c4d18 CPU:01 THREAD  : THRUNNING pid:41371 tid:1 priority:18 policy:FIFO
+t:0x04be4080 CPU:01 COMM    : REPLY_MESSAGE rcvid:0x00000301 pid:41371 tid:1
+t:0x04be7154 CPU:01 THREAD  : THRECEIVE pid:41371 tid:1 priority:18
+t:0x04bf03d0 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x04c57ff8 CPU:00 COMM    : SND_MESSAGE rcvid:0x00000302 src_pid:41370 src_tid:1 dst_pid:41372 dst_tid:1
+t:0x04c5e1a0 CPU:02 COMM    : REC_MESSAGE rcvid:0x00000302 pid:41372 tid:1 priority:52
+t:0x04c61274 CPU:02 THREAD  : THRUNNING pid:41372 tid:1 priority:52 policy:FIFO
+t:0x04d216a0 CPU:02 COMM    : REPLY_MESSAGE rcvid:0x00000302 pid:41372 tid:1
+t:0x04d24774 CPU:02 THREAD  : THRECEIVE pid:41372 tid:1 priority:48
+t:0x04d2d9f0 CPU:00 THREAD  : THRUNNING pid:41370 tid:1 priority:52 policy:FIFO
+t:0x04d76dd0 CPU:00 USREVENT: 811 pid:41370 tid:1 tag:DEADLINE_END frame:3
+t:0x04d79ea4 CPU:00 THREAD  : THNANOSLEEP pid:41370 tid:1 priority:52
+t:0x04f2e510 CPU:03 THREAD  : THRUNNING pid:41374 tid:1 priority:12 policy:RR
+t:0x04fc6e78 CPU:03 THREAD  : THRECEIVE pid:41374 tid:1 priority:12

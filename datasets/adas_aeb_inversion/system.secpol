@@ -1,0 +1,36 @@
+# ADAS ECU QNX 8.0 Security Policy (Pre-Hardening / Over-Privileged)
+type adas_aeb_t;
+type lidar_fusion_t;
+type can_telemetry_t;
+type qnxpulse_t;
+
+allow lidar_fusion_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    mem_phys
+    setuid
+    able_create
+};
+# Over-broad pathspace wildcard!
+allow_attach lidar_fusion_t /dev/...;
+
+allow adas_aeb_t self:ability {
+    nonroot
+    trace
+    priority
+};
+
+allow can_telemetry_t self:ability {
+    root
+    setuid
+    trace
+};
+
+allow qnxpulse_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    trace
+};
+allow_attach qnxpulse_t /dev/qnxpulse;

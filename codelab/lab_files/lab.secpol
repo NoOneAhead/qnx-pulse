@@ -1,0 +1,112 @@
+################################################################################
+# QNX SDP 8.0 Mandatory Access Control (MAC) Security Policy — lab.secpol
+#
+# Compile on host:
+#   secpolcompile -o secpol.bin lab.secpol
+# Push on target (in startup-script):
+#   secpolpush /proc/boot/secpol.bin
+# Inspect on target:
+#   secpol -i /proc/boot/secpol.bin
+################################################################################
+
+# ------------------------------------------------------------------------------
+# 1. Declare Security Types
+# ------------------------------------------------------------------------------
+type default;
+type slogger2_t;
+type console_t;
+
+# Two-phase least-privilege lifecycle for /dev/lidar_fusion:
+#   lidar_mgr_t     -> startup phase (can register /dev/lidar_fusion & create channel)
+#   lidar_mgr_run_t -> steady-state phase (all setup abilities permanently dropped)
+type lidar_mgr_t;
+type lidar_mgr_run_t;
+
+# Workload client types and tracing utility type
+type adas_aeb_t;
+type can_telem_t;
+type tracer_t;
+
+# ------------------------------------------------------------------------------
+# 2. Path Space Attachment Rules (allow_attach)
+# ------------------------------------------------------------------------------
+allow_attach slogger2_t /dev/slog2;
+allow_attach console_t /dev/ser1;
+allow_attach lidar_mgr_t /dev/lidar_fusion;
+
+# ------------------------------------------------------------------------------
+# 3. Core Infrastructure Types
+# ------------------------------------------------------------------------------
+# Lab startup script runs under 'default' (type 0) to launch typed services via
+# `on -T <type>`. In production ISO 26262 builds, transition init to a dedicated
+# `startup_t` type and leave `default` completely empty.
+allow default self:ability {
+    nonroot
+    spawn_setuid
+    settypeid:slogger2_t,console_t,lidar_mgr_t,adas_aeb_t,can_telem_t,tracer_t
+};
+
+allow slogger2_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    mem_phys
+};
+
+allow console_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    io
+    interrupt
+};
+
+# ------------------------------------------------------------------------------
+# 4. /dev/lidar_fusion Resource Manager — Startup vs. Runtime Privilege Split
+# ------------------------------------------------------------------------------
+# Startup type: ONLY the exact abilities needed to initialize the resource manager
+# and transition into lidar_mgr_run_t. No fork, no spawn, no setuid, no mem_phys.
+allow lidar_mgr_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    settypeid:lidar_mgr_run_t
+};
+
+# Bind secpol_transition_type(NULL, "run", 0) -> lidar_mgr_run_t
+derive_type lidar_mgr_t run lidar_mgr_run_t;
+
+# Steady-state runtime type: minimal non-root execution only.
+# Even if compromised while parsing sensor frames, it cannot register new /dev/*
+# nodes, open new public channels, spawn shells, or elevate scheduling privileges.
+allow lidar_mgr_run_t self:ability {
+    nonroot
+};
+
+# Allow lidar_mgr to emit structured diagnostics to slogger2 in both phases
+allow lidar_mgr_t slogger2_t:channel connect;
+allow lidar_mgr_run_t slogger2_t:channel connect;
+
+# ------------------------------------------------------------------------------
+# 5. ADAS Clients & Kernel Trace Capture Permissions
+# ------------------------------------------------------------------------------
+allow adas_aeb_t self:ability {
+    nonroot
+    priority:1-63
+};
+allow adas_aeb_t lidar_mgr_t:channel connect;
+allow adas_aeb_t lidar_mgr_run_t:channel connect;
+allow adas_aeb_t slogger2_t:channel connect;
+
+allow can_telem_t self:ability {
+    nonroot
+    priority:1-35
+};
+allow can_telem_t slogger2_t:channel connect;
+
+# Only tracer_t is permitted to invoke TraceEvent() / tracelogger (PROCMGR_AID_TRACE)
+allow tracer_t self:ability {
+    nonroot
+    trace
+};
+allow tracer_t slogger2_t:channel connect;

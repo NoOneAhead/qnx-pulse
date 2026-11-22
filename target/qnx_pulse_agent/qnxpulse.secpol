@@ -1,0 +1,38 @@
+# QNX SDP 8.0 Least-Privilege Security Policy for QNX-Pulse Companion Agent
+#
+# Compile:
+#   secpolcompile -i qnxpulse.secpol -o build/secpol.bin
+#
+# Runtime boot sequence (see qnx8-qemu-x86_64.build / qnx8-rpi5-aarch64.build):
+#   1. secpolpush -i /proc/boot/secpol.bin
+#   2. on -T qnxpulse_t -U 120:120 /proc/boot/qnx_pulse_agent &
+#   3. Agent attaches /dev/qnxpulse, then calls secpol_transition_type(NULL, "run", 0)
+#      to permanently drop pathspace & public_channel abilities into qnxpulse_run_t.
+
+# Initialization security type (briefly active only while attaching /dev/qnxpulse)
+type qnxpulse_t;
+
+# Post-initialization runtime security type (stripped to bare minimum abilities)
+type qnxpulse_run_t;
+
+# Authorize dynamic runtime transition triggered by secpol_transition_type(NULL, "run", 0)
+derive_type qnxpulse_t run qnxpulse_run_t;
+
+# Permit attaching only the dedicated /dev/qnxpulse resource manager path during init
+allow_attach qnxpulse_t /dev/qnxpulse;
+
+# Minimal initialization abilities required to run as UID 120:120, attach /dev/qnxpulse,
+# create its public dispatch channel, and configure instrumented kernel tracing
+allow qnxpulse_t self:ability {
+    nonroot
+    pathspace
+    public_channel
+    trace
+};
+
+# Stripped steady-state runtime abilities: pathspace and public_channel are revoked,
+# retaining strictly nonroot execution and TraceEvent() kernel trace control
+allow qnxpulse_run_t self:ability {
+    nonroot
+    trace
+};

@@ -1,0 +1,9 @@
+{
+  "id": "surgical_robot_irq_storm",
+  "name": "Medical Surgical Robot \u2014 1 kHz Force-Feedback IRQ Storm",
+  "domain": "Medical Robotics (IEC 62304 Class C)",
+  "arch": "aarch64 (ARMv8.2 4-core SMP)",
+  "tagline": "Unthrottled PCIe Endoscope IRQ 44 routed to CPU:00 causes 1 kHz haptic loop misses",
+  "description": "1 kHz surgical manipulator force-feedback loop (kinematics_ctrl, prio 58, 1.0 ms deadline) pinned to CPU:00 experiences repeated deadline misses when high-bandwidth endoscope DMA interrupts (IRQ 44, ~8.2 kHz) fire unthrottled on the exact same core instead of being routed to an isolated IST core.",
+  "severity": "CRITICAL"
+}

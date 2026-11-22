@@ -1,0 +1,9 @@
+{
+  "id": "adas_aeb_inversion",
+  "name": "Automotive ADAS AEB \u2014 IPC Priority Inversion & Deadline Miss",
+  "domain": "Automotive SDV (ISO 26262 ASIL-D)",
+  "arch": "x86_64 (4-core SMP)",
+  "tagline": "10 ms emergency braking deadline missed due to _NTO_CHF_FIXED_PRIORITY on /dev/lidar_fusion",
+  "description": "Autonomous Emergency Braking controller (adas_aeb, prio 52, 10 ms deadline) sends synchronous MsgSend requests to /dev/lidar_fusion (base prio 18). Because lidar_fusion created its channel with _NTO_CHF_FIXED_PRIORITY, QNX 8.0 kernel priority inheritance is disabled, allowing medium-priority can_telemetry (prio 30) to preempt lidar_fusion for 10.4 ms and cause a 12.45 ms braking deadline miss.",
+  "severity": "CRITICAL"
+}

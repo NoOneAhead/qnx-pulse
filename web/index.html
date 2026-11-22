@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QNX-Pulse — QNX 8.0 Microkernel Trace, IPC Topology, Buildfile &amp; Secpol Studio</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='2' y='2' width='24' height='24' rx='6' fill='%23070b14' stroke='%2300d4ff' stroke-width='2'/%3E%3Cpath d='M5 14h4.5L12 8l3.5 12 3-6H23' fill='none' stroke='%2300d4ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Mission Control Header -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="2" width="24" height="24" rx="6" stroke="#00d4ff" stroke-width="1.8" fill="rgba(0,212,255,0.08)"/>
+            <path d="M5 14H9.5L12 8L15.5 20L18.5 14H23" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">QNX-PULSE <span class="badge badge-cyan">QNX SDP 8.0</span></div>
+          <div class="brand-sub">Microkernel Trace, IPC Topology, Buildfile &amp; Secpol Studio</div>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <label class="scenario-picker-wrap">
+          <span class="control-label">SCENARIO</span>
+          <select id="scenarioSelect" class="select-input" aria-label="Select QNX 8.0 Scenario"></select>
+        </label>
+
+        <div class="status-pills">
+          <div id="headerHealthPill" class="pill pill-neutral">RT Health: --</div>
+          <div id="headerGradePill" class="pill pill-neutral">Secpol: --</div>
+        </div>
+
+        <a href="/codelab/" target="_blank" rel="noopener" class="btn btn-outline btn-sm" title="Open Standalone QNX 8.0 Interactive Codelab">
+          <span>QNX 8.0 Codelab ↗</span>
+        </a>
+        <button id="quickExportBtn" class="btn btn-primary btn-sm" type="button">
+          Export Audit Report
+        </button>
+      </div>
+    </header>
+
+    <!-- Scenario Context Strip -->
+    <section class="context-bar">
+      <div class="context-left">
+        <span id="scenarioDomain" class="tag tag-domain">Loading...</span>
+        <span id="scenarioTarget" class="tag tag-arch">QNX 8.0.0</span>
+        <span id="scenarioTagline" class="context-tagline">Initializing microkernel analyzer...</span>
+      </div>
+      <div class="context-right mono" id="traceMetaSummary">Events: -- | Duration: --</div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist" aria-label="Mission Control Views">
+      <button class="tab-btn active" data-tab="timeline" role="tab" aria-selected="true">
+        1. Real-Time Trace &amp; Scheduler
+      </button>
+      <button class="tab-btn" data-tab="ipc" role="tab" aria-selected="false">
+        2. IPC &amp; Resmgr Topology
+      </button>
+      <button class="tab-btn" data-tab="audit" role="tab" aria-selected="false">
+        3. Buildfile &amp; Secpol Auditor
+        <span id="auditCountBadge" class="tab-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="copilot" role="tab" aria-selected="false">
+        4. Diagnostic Copilot
+      </button>
+      <button class="tab-btn" data-tab="upload" role="tab" aria-selected="false">
+        5. Upload Trace &amp; Compliance
+      </button>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+
+      <!-- TAB 1: REAL-TIME TRACE & SCHEDULER -->
+      <section id="tab-timeline" class="tab-panel active">
+        <!-- KPI Row -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Real-Time Health Score</div>
+            <div class="kpi-value" id="kpiHealth">--</div>
+            <div class="kpi-sub" id="kpiHealthStatus">--</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">IPC Priority Inversions</div>
+            <div class="kpi-value" id="kpiInversions">--</div>
+            <div class="kpi-sub">MsgSend / MsgReply chains</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Hardware IRQ Storms</div>
+            <div class="kpi-value" id="kpiIrqStorms">--</div>
+            <div class="kpi-sub">ISR burst &amp; core contention</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Deadline Misses</div>
+            <div class="kpi-value" id="kpiDeadlineMisses">--</div>
+            <div class="kpi-sub">USREVENT frame budgets</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Security &amp; Boot Grade</div>
+            <div class="kpi-value" id="kpiAuditGrade">--</div>
+            <div class="kpi-sub" id="kpiAuditScore">mkifs + secpol audit</div>
+          </div>
+        </div>
+
+        <!-- Incident Alert Cards -->
+        <div id="incidentAlerts" class="incident-stack"></div>
+
+        <!-- Gantt Scheduler Timeline Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>QNX 8.0 SMP Microkernel Scheduler Timeline</h2>
+              <p class="card-desc">Thread execution states reconstructed from <code class="mono">traceprinter</code> events (<code class="mono">THRUNNING</code>, <code class="mono">THREADY</code>, <code class="mono">THREPLY</code>, <code class="mono">INT_ENTR/EXIT</code>).</p>
+            </div>
+            <div class="timeline-controls">
+              <div class="legend">
+                <span><i class="dot dot-run"></i>RUNNING</span>
+                <span><i class="dot dot-ready"></i>READY</span>
+                <span><i class="dot dot-reply"></i>REPLY BLOCKED</span>
+                <span><i class="dot dot-irq"></i>IRQ BURST</span>
+                <span><i class="dot dot-inv"></i>INVERSION SPAN</span>
+              </div>
+              <div class="zoom-group">
+                <button class="btn btn-xs btn-outline zoom-btn active" data-zoom="1">1×</button>
+                <button class="btn btn-xs btn-outline zoom-btn" data-zoom="2">2×</button>
+                <button class="btn btn-xs btn-outline zoom-btn" data-zoom="4">4×</button>
+              </div>
+            </div>
+          </div>
+          <div class="gantt-scroll">
+            <svg id="ganttSvg" class="gantt-svg" role="img" aria-label="QNX 8.0 Thread Scheduler Gantt Chart"></svg>
+          </div>
+          <div id="ganttTooltip" class="tooltip hidden"></div>
+        </div>
+
+        <!-- Core Utilization + Latency Histogram Row -->
+        <div class="two-col-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Per-Core SMP &amp; IRQ Utilization</h2>
+                <p class="card-desc">Busy execution vs. hardware interrupt overhead per CPU core.</p>
+              </div>
+            </div>
+            <div id="coreUtilContainer" class="core-bars"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>IPC &amp; Response Latency Distribution</h2>
+                <p class="card-desc">Histogram across microsecond &amp; millisecond latency buckets.</p>
+              </div>
+            </div>
+            <svg id="histogramSvg" class="histogram-svg" viewBox="0 0 540 210" role="img" aria-label="Latency Distribution Histogram"></svg>
+          </div>
+        </div>
+
+        <!-- Per-Thread Real-Time Metrics Table -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Per-Thread Real-Time Determinism &amp; Priority Inheritance Table</h2>
+              <p class="card-desc">WCET, p95/p99 latency, jitter, IPC blocking time, and observed priority boost ranges.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="threadsTable">
+              <thead>
+                <tr>
+                  <th>Thread</th>
+                  <th>Prio Range</th>
+                  <th>Policy</th>
+                  <th class="num">Activations</th>
+                  <th class="num">WCET (us)</th>
+                  <th class="num">p95 (us)</th>
+                  <th class="num">p99 (us)</th>
+                  <th class="num">Jitter (us)</th>
+                  <th class="num">IPC Blocked</th>
+                  <th class="num">Preemptions</th>
+                  <th class="num">Misses</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Correlated slog2info Logs -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Correlated QNX 8.0 <code class="mono">slog2info</code> Telemetry Stream</h2>
+              <p class="card-desc">Structured ring-buffer system logs correlated alongside kernel trace events.</p>
+            </div>
+            <div class="log-filters">
+              <button class="btn btn-xs btn-outline log-filter active" data-sev="ALL">All</button>
+              <button class="btn btn-xs btn-outline log-filter" data-sev="CRITICAL">Critical/Error</button>
+              <button class="btn btn-xs btn-outline log-filter" data-sev="WARNING">Warning</button>
+            </div>
+          </div>
+          <div id="slog2Container" class="slog2-feed mono"></div>
+        </div>
+      </section>
+
+      <!-- TAB 2: IPC & RESOURCE MANAGER TOPOLOGY -->
+      <section id="tab-ipc" class="tab-panel">
+        <div class="ipc-layout">
+          <div class="card ipc-graph-card">
+            <div class="card-header">
+              <div>
+                <h2>QNX 8.0 Native IPC &amp; Resource Manager Topology</h2>
+                <p class="card-desc">Directed graph of synchronous <code class="mono">MsgSend/MsgReply</code> channels (solid) and asynchronous <code class="mono">MsgSendPulse</code> flows (dashed). Click any node or edge to inspect.</p>
+              </div>
+              <div class="legend">
+                <span><i class="dot dot-cyan"></i>CLIENT</span>
+                <span><i class="dot dot-emerald"></i>RESMGR (/dev/*)</span>
+                <span><i class="dot dot-amber"></i>HYBRID</span>
+                <span><i class="dot dot-inv"></i>INVERSION HOTSPOT</span>
+              </div>
+            </div>
+            <div class="ipc-svg-wrap">
+              <svg id="ipcGraphSvg" class="ipc-svg" viewBox="0 0 840 460" role="img" aria-label="QNX IPC Dependency Graph"></svg>
+            </div>
+          </div>
+
+          <div class="card ipc-inspector-card">
+            <div class="card-header">
+              <div>
+                <h2>Channel &amp; Process Inspector</h2>
+                <p class="card-desc">Selected process or IPC channel telemetry.</p>
+              </div>
+            </div>
+            <div id="ipcInspector" class="inspector-body">
+              <div class="empty-hint">Click a node or IPC edge in the topology graph to inspect resource manager paths, priority inheritance status, and round-trip latency percentiles.</div>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">All Observed IPC Channels</h3>
+            <div class="table-wrap">
+              <table class="data-table compact" id="ipcEdgesTable">
+                <thead>
+                  <tr>
+                    <th>Channel</th>
+                    <th>Kind</th>
+                    <th class="num">Msgs</th>
+                    <th class="num">Max (us)</th>
+                    <th>Prio Inherit</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: BUILDFILE & SECPOL AUDITOR -->
+      <section id="tab-audit" class="tab-panel">
+        <div class="audit-toolbar card">
+          <div class="audit-score-strip">
+            <div class="grade-ring" id="auditGradeRing">--</div>
+            <div>
+              <h2 id="auditHeadline">QNX 8.0 Static IFS &amp; Secpol Security Auditor</h2>
+              <p class="card-desc" id="auditSubline">Live rule engine inspecting <code class="mono">mkifs</code> boot ordering, <code class="mono">procnto-smp-instr</code> flags, <code class="mono">secpolpush</code>, pathspace <code class="mono">allow_attach</code>, and least-privilege <code class="mono">_run_t</code> privilege drops.</p>
+            </div>
+          </div>
+          <div class="audit-actions">
+            <button id="runAuditBtn" class="btn btn-primary" type="button">Run Live Audit</button>
+            <button id="applyHardenedBtn" class="btn btn-emerald" type="button">Apply Auto-Hardened Secpol →</button>
+          </div>
+        </div>
+
+        <div class="two-col-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>QNX 8.0 <code class="mono">mkifs</code> Buildfile (<code class="mono">.build</code>)</h2>
+                <p class="card-desc" id="buildfileMetaBar">Edit live to test boot sequencing &amp; kernel flags.</p>
+              </div>
+            </div>
+            <textarea id="buildfileEditor" class="code-editor mono" spellcheck="false" aria-label="QNX 8.0 mkifs Buildfile Editor"></textarea>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>QNX 8.0 Security Policy (<code class="mono">.secpol</code>)</h2>
+                <p class="card-desc" id="secpolMetaBar">Edit live to test abilities, types, and path attachments.</p>
+              </div>
+            </div>
+            <textarea id="secpolEditor" class="code-editor mono" spellcheck="false" aria-label="QNX 8.0 Secpol Policy Editor"></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Security &amp; Boot Audit Findings</h2>
+              <p class="card-desc">Every finding cites exact line numbers, QNX 8.0 rule IDs, and ISO 26262 / IEC 62304 references.</p>
+            </div>
+            <div class="log-filters">
+              <button class="btn btn-xs btn-outline finding-filter active" data-sev="ALL">All</button>
+              <button class="btn btn-xs btn-outline finding-filter" data-sev="CRITICAL">Critical</button>
+              <button class="btn btn-xs btn-outline finding-filter" data-sev="HIGH">High</button>
+              <button class="btn btn-xs btn-outline finding-filter" data-sev="MEDIUM">Medium</button>
+            </div>
+          </div>
+          <div id="auditFindingsList" class="findings-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Auto-Hardening Least-Privilege <code class="mono">secpol</code> Unified Diff</h2>
+              <p class="card-desc">Automatically removes <code class="mono">root</code>/<code class="mono">able_create</code>, bounds <code class="mono">mem_phys</code>, narrows <code class="mono">allow_attach</code>, and generates post-init <code class="mono">*_run_t</code> privilege-drop types.</p>
+            </div>
+            <button id="copyHardenedBtn" class="btn btn-xs btn-outline" type="button">Copy Hardened Policy</button>
+          </div>
+          <pre id="hardenedDiffView" class="diff-viewer mono"></pre>
+        </div>
+      </section>
+
+      <!-- TAB 4: DIAGNOSTIC COPILOT -->
+      <section id="tab-copilot" class="tab-panel">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>QNX 8.0 Real-Time &amp; Security Diagnostic Copilot</h2>
+              <p class="card-desc">100% deterministic offline systems-engineering engine + optional BYO-LLM synthesis (OpenAI / Anthropic / local Ollama).</p>
+            </div>
+            <span id="copilotModeBadge" class="badge badge-emerald">Offline Deterministic Engine</span>
+          </div>
+
+          <div class="quick-prompts">
+            <button class="chip prompt-chip" data-q="Why did the real-time task miss its deadline and how do I fix the C code?">Why did the deadline miss happen?</button>
+            <button class="chip prompt-chip" data-q="How do I fix QNX 8.0 priority inversion with ChannelCreate and MsgSend?">Fix IPC Priority Inversion</button>
+            <button class="chip prompt-chip" data-q="How do I harden my QNX 8.0 secpol policy using secpol_transition_type?">Harden Secpol &amp; Privilege Drop</button>
+            <button class="chip prompt-chip" data-q="How do I build and boot this QNX 8.0 IFS image in QEMU x86_64?">QNX 8.0 QEMU Boot Command</button>
+          </div>
+
+          <div class="copilot-input-row">
+            <input id="copilotQuestionInput" type="text" class="text-input" placeholder="Ask about priority inversion, IRQ affinity, WCET, mkifs .build, or secpol..." />
+            <button id="askCopilotBtn" class="btn btn-primary" type="button">Diagnose</button>
+          </div>
+
+          <details class="llm-drawer">
+            <summary>Optional BYO-LLM Provider Settings (leave as Offline for 100% local deterministic mode)</summary>
+            <div class="llm-grid">
+              <label>
+                <span>Provider</span>
+                <select id="llmProvider" class="select-input">
+                  <option value="none" selected>Offline Deterministic (Default)</option>
+                  <option value="openai">OpenAI (BYO Key)</option>
+                  <option value="anthropic">Anthropic (BYO Key)</option>
+                  <option value="ollama">Local Ollama</option>
+                </select>
+              </label>
+              <label>
+                <span>Model (optional)</span>
+                <input id="llmModel" type="text" class="text-input" placeholder="e.g. gpt-4o-mini / llama3.2" />
+              </label>
+              <label>
+                <span>API Key (never stored)</span>
+                <input id="llmApiKey" type="password" class="text-input" placeholder="sk-... (optional)" />
+              </label>
+              <label>
+                <span>Base URL (optional)</span>
+                <input id="llmBaseUrl" type="text" class="text-input" placeholder="http://localhost:11434" />
+              </label>
+            </div>
+          </details>
+        </div>
+
+        <div id="copilotOutput" class="copilot-output"></div>
+      </section>
+
+      <!-- TAB 5: UPLOAD TRACE & COMPLIANCE EXPORT -->
+      <section id="tab-upload" class="tab-panel">
+        <div class="two-col-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Analyze Custom QNX 8.0 <code class="mono">traceprinter</code> Output</h2>
+                <p class="card-desc">Paste output from <code class="mono">traceprinter -f trace.kev</code> (or from our host C simulator <code class="mono">qnx_pulse_agent --format traceprinter</code>).</p>
+              </div>
+            </div>
+            <label class="field-label">Traceprinter Dump (<code class="mono">.txt</code>)</label>
+            <textarea id="customTraceInput" class="code-editor mono short" placeholder="TRACE_SYSNAME:: QNX&#10;TRACE_SYS_RELEASE:: 8.0.0&#10;t:0x01000000 CPU:00 PROCESS : PROCCREATE_NAME ..."></textarea>
+
+            <label class="field-label">Optional <code class="mono">slog2info -S -t</code> Log</label>
+            <textarea id="customSlog2Input" class="code-editor mono tiny" placeholder="Nov 19 14:22:10.021 my_resmgr.41371 events* WARNING 1 101 ..."></textarea>
+
+            <div class="upload-actions">
+              <button id="analyzeCustomBtn" class="btn btn-primary" type="button">Analyze Custom Trace</button>
+              <button id="loadExampleIntoUploadBtn" class="btn btn-outline" type="button">Load Active Scenario Text</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Safety &amp; Compliance Evidence Report Exporter</h2>
+                <p class="card-desc">Generate auditable Markdown or JSON packages combining real-time WCET/inversion proof with static boot/secpol verification.</p>
+              </div>
+            </div>
+            <div class="export-controls">
+              <label>
+                <span>Certification Standard</span>
+                <select id="reportStandard" class="select-input">
+                  <option value="ISO-26262-ASIL-D">ISO 26262 ASIL-D (Automotive)</option>
+                  <option value="IEC-62304-CLASS-C">IEC 62304 Class C (Medical)</option>
+                  <option value="IEC-61508-SIL-3">IEC 61508 SIL-3 (Industrial Robotics)</option>
+                </select>
+              </label>
+              <label>
+                <span>Format</span>
+                <select id="reportFormat" class="select-input">
+                  <option value="markdown">Markdown (.md)</option>
+                  <option value="json">Structured JSON (.json)</option>
+                </select>
+              </label>
+            </div>
+            <div class="upload-actions">
+              <button id="previewReportBtn" class="btn btn-primary" type="button">Generate Preview</button>
+              <button id="downloadReportBtn" class="btn btn-emerald" type="button">Download File</button>
+            </div>
+            <pre id="reportPreview" class="report-preview mono">Click "Generate Preview" to build the compliance verification artifact for the active scenario.</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div><strong>QNX-Pulse v1.0.0</strong> — Built for QNX Global Hackathon 2026 • Targeting QNX SDP 8.0 (<code class="mono">procnto-smp-instr</code>, <code class="mono">tracelogger</code>, <code class="mono">mkifs</code>, <code class="mono">secpol</code>)</div>
+      <div class="footer-links">
+        <a href="/docs" target="_blank" rel="noopener">REST API Docs</a>
+        <a href="/codelab/" target="_blank" rel="noopener">Interactive QNX 8.0 Codelab</a>
+      </div>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

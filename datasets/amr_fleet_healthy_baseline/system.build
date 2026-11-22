@@ -1,0 +1,45 @@
+# QNX SDP 8.0 Hardened AMR Robotics Buildfile (Grade A Reference)
+[virtual=x86_64,multiboot] boot = {
+    startup-x86 -D 8250
+    PATH=/proc/boot:/system/bin
+    LD_LIBRARY_PATH=/proc/boot:/system/lib:/system/lib/dll
+    procnto-smp-instr -v
+}
+
+[+script] startup-script = {
+    display_msg "Enforcing QNX 8.0 security policy..."
+    secpolpush -i /proc/boot/secpol.bin
+
+    on -T slogger2_t -U 21:21 /proc/boot/slogger2 &
+    waitfor /dev/slog2 4
+
+    on -T lidar_fusion_t -U 110:110 /proc/boot/lidar_fusion &
+    waitfor /dev/lidar_fusion 4
+
+    on -T motor_drive_mgr_t -U 112:112 /proc/boot/motor_drive_mgr &
+    waitfor /dev/motor_can 4
+
+    on -T motion_planner_t -U 114:114 /proc/boot/motion_planner &
+    on -T fleet_telemetry_t -U 118:118 /proc/boot/fleet_telemetry &
+    on -T qnxpulse_t -U 120:120 /proc/boot/qnx_pulse_agent &
+    waitfor /dev/qnxpulse 4
+
+    procmgr_symlink /proc/boot/ksh /bin/sh
+    display_msg "AMR QNX 8.0 Boot Complete."
+}
+
+[uid=0 gid=0]
+{
+    libc.so
+    libslog2.so
+    libsecpol.so
+    ksh
+    secpolpush
+    secpol.bin={./secpol.bin}
+    slogger2
+    lidar_fusion
+    motor_drive_mgr
+    motion_planner
+    fleet_telemetry
+    qnx_pulse_agent
+}

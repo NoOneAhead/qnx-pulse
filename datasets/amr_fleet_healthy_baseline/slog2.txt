@@ -1,0 +1,4 @@
+Nov 19 17:10:00.001 lidar_fusion.60201 events* INFO 1 100 Attached /dev/lidar_fusion (priority inheritance active); transitioned to lidar_fusion_run_t
+Nov 19 17:10:00.002 motion_planner.60200 mpc* INFO 1 200 Cycle 1 complete in 593 us (budget 5000 us)
+Nov 19 17:10:00.007 motion_planner.60200 mpc* INFO 1 200 Cycle 2 complete in 621 us (budget 5000 us)
+Nov 19 17:10:00.012 qnx_pulse_agent.60204 monitor* INFO 1 900 Real-time invariants nominal: 0 inversions, 0 misses

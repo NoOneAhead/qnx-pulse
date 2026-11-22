@@ -1,0 +1,26 @@
+# QNX SDP 8.0 Surgical Robot Controller Buildfile (Pre-Audit)
+[virtual=aarch64le,raw] boot = {
+    startup-bcm2712 -D pl011
+    PATH=/proc/boot:/system/bin
+    LD_LIBRARY_PATH=/proc/boot:/system/lib
+    # Non-instrumented kernel prevents live tracelogger capture!
+    procnto-smp -v
+}
+
+[+script] startup-script = {
+    display_msg "Booting Surgical Manipulator..."
+    # Missing secpolpush entirely!
+    /proc/boot/kinematics_ctrl &
+    /proc/boot/imu_sensor_mgr &
+    /proc/boot/endoscope_dma &
+    /proc/boot/safety_watchdog &
+}
+
+[uid=0 gid=0]
+{
+    libc.so
+    kinematics_ctrl
+    imu_sensor_mgr
+    endoscope_dma
+    safety_watchdog
+}

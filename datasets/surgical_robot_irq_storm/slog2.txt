@@ -1,0 +1,4 @@
+Nov 19 16:05:12.001 kinematics_ctrl.50100 ctrl* INFO 1 100 1 kHz haptic control loop started on CPU:00 (prio 58 FIFO)
+Nov 19 16:05:12.002 endoscope_dma.50102 dma* WARNING 1 402 High-rate PCIe DMA burst on IRQ 44 (no coalescing configured)
+Nov 19 16:05:12.003 kinematics_ctrl.50100 ctrl* CRITICAL 1 199 DEADLINE MISS Frame 2: 1.34 ms > 1.00 ms budget (ISR preemption storm on CPU:00)
+Nov 19 16:05:12.004 safety_watchdog.50103 wd* ERROR 1 501 Two consecutive 1 kHz haptic deadline misses detected; entering damped-torque safeguard

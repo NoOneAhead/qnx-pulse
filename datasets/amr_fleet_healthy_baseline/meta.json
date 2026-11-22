@@ -1,0 +1,9 @@
+{
+  "id": "amr_fleet_healthy_baseline",
+  "name": "AMR Autonomous Mobile Robot \u2014 Hardened & Tuned QNX 8.0 Baseline",
+  "domain": "Autonomous Robotics (Reference Grade-A Baseline)",
+  "arch": "x86_64 (4-core SMP)",
+  "tagline": "Priority Inheritance enabled + least-privilege secpol (_run_t) + sub-650 us deterministic latency",
+  "description": "Properly engineered QNX 8.0 SMP robotics stack: /dev/lidar_fusion uses default ChannelCreate(0) so motion_planner (prio 52) boosts lidar_fusion from prio 18 -> 52 automatically during MsgSend/MsgReply, preventing fleet_telemetry (prio 28) preemption. IFS boots procnto-smp-instr with early secpolpush and post-init secpol_transition_type(NULL, \"run\", 0) privilege drops (Grade A, 100/100).",
+  "severity": "HEALTHY"
+}
