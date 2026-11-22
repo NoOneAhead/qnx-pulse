@@ -51,6 +51,12 @@ def _create_qnx8_stubs(stub_dir: Path) -> None:
     (stub_dir / "qnx8_compat_prelude.h").write_text(
         """#ifndef _QNX8_COMPAT_PRELUDE_H
 #define _QNX8_COMPAT_PRELUDE_H
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE 1
+#endif
 #include <stdint.h>
 #include <signal.h>
 #include <sched.h>
