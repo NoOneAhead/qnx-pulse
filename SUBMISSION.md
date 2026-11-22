@@ -82,6 +82,7 @@ We built **QNX-Pulse** to give every QNX 8.0 developer an instant, offline-first
      qemu-system-x86_64 -M q35 -smp 2 -m 1G -nographic -kernel build/qnx8-qemu-x86_64.ifs
      ```
    - Inside the booted QNX 8.0 shell, run `sh scripts/qnx8_capture_and_verify.sh` to verify `/dev/qnxpulse` + `secpol` + capture real `.kev` / `traceprinter` / `slog2info` artifacts!
-4. **Upload Visuals & Record <3 Minute YouTube Demo Video**:
+4. **Demo Video & Devpost Gallery**:
+   - **Public YouTube Demo Video (`02:28`, 1080p HD):** `https://youtu.be/rv_Hrj68xYY`
    - Upload `docs/images/qnx-pulse-logo.png` as the Devpost project thumbnail and the 4 screenshots in `docs/images/` into the Devpost image gallery.
-   - Record a <3-minute English YouTube demo following [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) (timed to **2m 35s**), and submit on Devpost before **Dec 15, 2026 @ 2:00 PM ET**.
+   - Submit on Devpost (`https://qnx.devpost.com/`) before **Dec 15, 2026 @ 2:00 PM ET**.

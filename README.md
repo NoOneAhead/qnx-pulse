@@ -9,6 +9,7 @@
   <a href="https://www.qnx.com/developers/docs/8.0/"><img src="https://img.shields.io/badge/Target%20RTOS-QNX%20SDP%208.0-10b981.svg" alt="Target RTOS: QNX SDP 8.0" /></a>
   <a href="https://qnx.devpost.com/"><img src="https://img.shields.io/badge/QNX%20Global%20Hackathon-Developer%20Tooling%20%26%20Host%20Tools-a78bfa.svg" alt="Category: Developer Tooling &amp; Host Tools" /></a>
   <a href="https://nooneahead.github.io/qnx-pulse/"><img src="https://img.shields.io/badge/Interactive%20Codelab-Live%20on%20GitHub%20Pages-38bdf8.svg" alt="Interactive Codelab Live on GitHub Pages" /></a>
+  <a href="https://youtu.be/rv_Hrj68xYY"><img src="https://img.shields.io/badge/Demo%20Video-YouTube%201080p%20(2m29s)-ff0000.svg" alt="Demo Video on YouTube" /></a>
 </p>
 
 > **Pinpoint QNX 8.0 IPC priority inversions, interrupt storms, boot ordering races, and over-privileged `secpol` policies in seconds — from a unified host Mission Control Studio, CI CLI, native QNX 8.0 C Resource Manager (`/dev/qnxpulse`), and standalone interactive QNX 8.0 Codelab.**
